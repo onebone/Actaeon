@@ -10,7 +10,7 @@ public class Node{
 			throw new IllegalArgumentException("Node cannot be null");
 		}
 
-		this.node = node;
+		this.node = new Vector2(node.x, node.y);
 	}
 
 	public Vector2 getNode(){
