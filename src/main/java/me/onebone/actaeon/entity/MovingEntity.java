@@ -14,25 +14,59 @@ abstract public class MovingEntity extends EntityCreature{
 		super(chunk, nbt);
 	}
 
+	public void jump(){
+		if(this.onGround){
+			this.motionY = 0.5;
+		}
+	}
+
 	@Override
 	public boolean onUpdate(int currentTick){
 		if(this.closed){
 			return false;
 		}
 
+		AxisAlignedBB[] list = this.level.getCollisionCubes(this, this.level.getTickRate() > 1 ? this.boundingBox.getOffsetBoundingBox(0, -1, 0) : this.boundingBox.addCoord(0, -1, 0), false);
+
+		double maxY = 0;
+		for(AxisAlignedBB bb : list){
+			if(bb.maxY > maxY){
+				maxY = bb.maxY;
+			}
+		}
+
+		this.onGround = (maxY == this.boundingBox.minY);
+
 		if(!this.onGround){
 			this.motionY -= this.getGravity();
-		}else if(this.isKnockback){
+		}
+
+		if(this.isKnockback){                   // knockback 이 true 인 경우는 맞은 직후
+			this.isKnockback = false;           // 다음으로 땅에 닿을 때 knockback 으로 인한 움직임을 멈춘다.
+		}else if(this.onGround){
 			this.motionX = this.motionZ = 0;
-			this.isKnockback = false;
 		}
 
 		this.motionX *= (1 - this.getDrag());
 		this.motionZ *= (1 - this.getDrag());
 
+		if(this.onGround){
+			// TODO: Path navigating
+		}
+
 		this.move(this.motionX, this.motionY, this.motionZ);
 
 		return super.onUpdate(currentTick);
+	}
+
+	@Override
+	protected void checkGroundState(double movX, double movY, double movZ, double dx, double dy, double dz) {
+		this.isCollidedVertically = movY != dy;
+		this.isCollidedHorizontally = (movX != dx || movZ != dz);
+		this.isCollided = (this.isCollidedHorizontally || this.isCollidedVertically);
+
+		// this.onGround = (movY != dy && movY < 0);
+		// onGround 는 onUpdate 에서 확인
 	}
 
 	@Override
@@ -45,7 +79,6 @@ abstract public class MovingEntity extends EntityCreature{
 	@Override
 	public void knockBack(Entity attacker, double damage, double x, double z, double base){
 		this.isKnockback = true;
-		this.onGround = false;
 
 		super.knockBack(attacker, damage, x, z, base);
 	}
