@@ -6,12 +6,20 @@ import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.math.AxisAlignedBB;
 import cn.nukkit.nbt.tag.CompoundTag;
 import cn.nukkit.timings.Timings;
+import me.onebone.actaeon.route.Node;
+import me.onebone.actaeon.route.RouteFinter;
+import me.onebone.actaeon.route.SimpleRouteFinder;
 
 abstract public class MovingEntity extends EntityCreature{
 	private boolean isKnockback = false;
+	private RouteFinter route = null;
+
+	protected int lastRouteUpdate = 0;
 
 	public MovingEntity(FullChunk chunk, CompoundTag nbt){
 		super(chunk, nbt);
+
+		this.route = new SimpleRouteFinder(); // TODO Improve route finder
 	}
 
 	public void jump(){
@@ -51,7 +59,28 @@ abstract public class MovingEntity extends EntityCreature{
 		this.motionZ *= (1 - this.getDrag());
 
 		if(this.onGround){
-			// TODO: Path navigating
+			if(!this.route.isSearching()){
+				Entity[] entities = this.level.getNearbyEntities(new AxisAlignedBB(this.x, this.y, this.z, this.x, this.y, this.z).expand(7, 7, 7));
+				Entity near = null;
+				for(Entity entity : entities){
+					if(near == null || this.distance(near) < this.distance(entity)){
+						near = entity;
+					}
+				}
+
+				if(near != null){
+					this.route.setDestination(near);
+					if(this.route.search()){
+						Node node = this.route.get();
+
+						double speed = this.getMovementSpeed();
+
+						// TODO motionX motionZ
+					}else{
+						// TODO get path later
+					}
+				}
+			}
 		}
 
 		this.move(this.motionX, this.motionY, this.motionZ);
