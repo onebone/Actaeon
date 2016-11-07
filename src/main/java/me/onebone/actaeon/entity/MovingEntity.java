@@ -99,7 +99,7 @@ abstract public class MovingEntity extends EntityCreature{
 
 			double angle = Math.atan2(node.z - this.z, node.x - this.x);
 			this.yaw = (float) ((angle * 180) / Math.PI) - 90;
-		}
+		}else if(this.route.isSearching()) this.route.search();
 
 		this.move(this.motionX, this.motionY, this.motionZ);
 
