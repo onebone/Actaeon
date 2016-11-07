@@ -7,7 +7,7 @@ public class SimpleRouteFinder extends RouteFinter{
 
 		this.addNode(new Node(this.getDestination())); // just go straight
 
-		return false;
+		return true;
 	}
 
 	@Override
@@ -16,7 +16,7 @@ public class SimpleRouteFinder extends RouteFinter{
 	}
 
 	@Override
-	public boolean isDone(){
-		return true;
+	public boolean isSuccess(){
+		return nodes.size() > 0;
 	}
 }

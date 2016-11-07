@@ -1,18 +1,20 @@
 package me.onebone.actaeon.entity;
 
+import cn.nukkit.Player;
 import cn.nukkit.entity.Entity;
 import cn.nukkit.entity.EntityCreature;
 import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.math.AxisAlignedBB;
+import cn.nukkit.math.Vector3;
 import cn.nukkit.nbt.tag.CompoundTag;
 import cn.nukkit.timings.Timings;
-import me.onebone.actaeon.route.Node;
 import me.onebone.actaeon.route.RouteFinter;
 import me.onebone.actaeon.route.SimpleRouteFinder;
 
 abstract public class MovingEntity extends EntityCreature{
 	private boolean isKnockback = false;
 	private RouteFinter route = null;
+	private Vector3 target = null;
 
 	protected int lastRouteUpdate = 0;
 
@@ -58,26 +60,51 @@ abstract public class MovingEntity extends EntityCreature{
 		this.motionX *= (1 - this.getDrag());
 		this.motionZ *= (1 - this.getDrag());
 
+		if(!this.route.isSearching() && this.route.isSuccess() && this.route.hasRoute()){
+			if(this.route.hasReachedNode(this)){
+				if(!this.route.next()){
+					this.route.arrived();
+					return super.onUpdate(currentTick);
+				}
+			}
+
+			Vector3 node = this.route.get().getNode();
+
+			double speed = this.getMovementSpeed();
+
+			double total = Math.abs(node.z - this.z) + Math.abs(node.x - this.x);
+			this.motionX = speed * (node.x - this.x) / total;
+			this.motionZ = speed * (node.z - this.z) / total;
+
+			double angle = Math.atan2(node.z - this.z, node.x - this.x);
+			this.yaw = (float) ((angle * 180) / Math.PI) - 90;
+		}
+
 		if(this.onGround){
 			if(!this.route.isSearching()){
 				Entity[] entities = this.level.getNearbyEntities(new AxisAlignedBB(this.x, this.y, this.z, this.x, this.y, this.z).expand(7, 7, 7));
 				Entity near = null;
-				for(Entity entity : entities){
-					if(near == null || this.distance(near) < this.distance(entity)){
-						near = entity;
+
+				if(this.target == null || this.target.distance(this) > 10){
+					for(Entity entity : entities){
+						if(entity instanceof Player && (near == null || this.distance(near) < this.distance(entity))){
+							near = entity;
+						}
 					}
 				}
 
 				if(near != null){
+					this.target = near;
 					this.route.setDestination(near);
-					if(this.route.search()){
-						Node node = this.route.get();
 
-						double speed = this.getMovementSpeed();
-
-						// TODO motionX motionZ
-					}else{
-						// TODO get path later
+					this.route.search();
+				}else if(this.target != null){
+					if(this.route.getDestination().distance(this.target) > 1.5){
+						this.route.setDestination(this.target);
+						this.route.search();
+					}else if(this.distance(this.target) > 10){ // 대상이 너무 멀리 있다면 따라가지 않는다
+						this.target = null;
+						this.route.arrived();
 					}
 				}
 			}

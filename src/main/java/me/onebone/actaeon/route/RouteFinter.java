@@ -12,7 +12,9 @@ public abstract class RouteFinter{
 	protected List<Node> nodes = new ArrayList<>();
 
 	public void setDestination(Vector3 destination){
-		this.destination = destination;
+		this.destination = new Vector3(destination.x, destination.y, destination.z);
+
+		this.resetNodes();
 	}
 
 	public Vector3 getDestination(){
@@ -33,6 +35,8 @@ public abstract class RouteFinter{
 	 * @return true if it has next node to go
 	 */
 	public boolean hasNext(){
+		if(nodes.size() == 0) throw new IllegalStateException("There is no path found");
+
 		return nodes.size() > this.current + 1;
 	}
 
@@ -41,6 +45,8 @@ public abstract class RouteFinter{
 	 * @return true if succeed
 	 */
 	public boolean next(){
+		if(nodes.size() == 0) throw new IllegalStateException("There is no path found");
+
 		if(this.hasNext()){
 			this.current++;
 			return true;
@@ -65,12 +71,21 @@ public abstract class RouteFinter{
 	 * @return current node
 	 */
 	public Node get(){
+		if(nodes.size() == 0) throw new IllegalStateException("There is no path found.");
 		return nodes.get(current);
+	}
+
+	public void arrived(){
+		this.nodes.clear();
+	}
+
+	public boolean hasRoute(){
+		return this.nodes.size() > 0;
 	}
 
 	/**
 	 * Search for route
-	 * @return true if extra process for finding route it not needed
+	 * @return true if finding path is done. It also returns true even if there is no route.
 	 */
 	public abstract boolean search();
 
@@ -80,7 +95,7 @@ public abstract class RouteFinter{
 	public abstract boolean isSearching();
 
 	/**
-	 * @return true if finding route is done
+	 * @return true if finding route was success
 	 */
-	public abstract boolean isDone();
+	public abstract boolean isSuccess();
 }
