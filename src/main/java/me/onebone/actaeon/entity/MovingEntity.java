@@ -16,6 +16,9 @@ abstract public class MovingEntity extends EntityCreature{
 	private RouteFinter route = null;
 	private Vector3 target = null;
 
+	private double[] expected = new double[3];
+	private boolean firstMove = true;
+
 	protected int lastRouteUpdate = 0;
 
 	public MovingEntity(FullChunk chunk, CompoundTag nbt){
@@ -64,9 +67,21 @@ abstract public class MovingEntity extends EntityCreature{
 			if(this.route.hasReachedNode(this)){
 				if(!this.route.next()){
 					this.route.arrived();
+					this.firstMove = true;
+
 					return super.onUpdate(currentTick);
 				}
 			}
+
+			if(!this.firstMove){
+				if(this.expected[0] != this.x || this.expected[1] != this.y || this.expected[2] != this.z){ // 장애물을 만났거나 어떤 이유로 다른 곳으로 이동된 경우
+					this.route.research(); // 이럴 경우 경로를 재탐색
+					this.firstMove = true;
+
+					return super.onUpdate(currentTick);
+				}
+			}
+			this.firstMove = false;
 
 			Vector3 node = this.route.get().getNode();
 
@@ -76,9 +91,13 @@ abstract public class MovingEntity extends EntityCreature{
 			this.motionX = speed * (node.x - this.x) / total;
 			this.motionZ = speed * (node.z - this.z) / total;
 
+			this.expected = new double[]{this.x + this.motionX, this.y + this.motionY, this.z + this.motionZ};
+
 			double angle = Math.atan2(node.z - this.z, node.x - this.x);
 			this.yaw = (float) ((angle * 180) / Math.PI) - 90;
 		}
+
+		this.move(this.motionX, this.motionY, this.motionZ);
 
 		if(this.onGround){
 			if(!this.route.isSearching()){
@@ -94,11 +113,15 @@ abstract public class MovingEntity extends EntityCreature{
 				}
 
 				if(near != null){
+					this.firstMove = true;
+
 					this.target = near;
 					this.route.setDestination(near);
 
 					this.route.search();
 				}else if(this.target != null){
+					this.firstMove = true;
+
 					if(this.route.getDestination().distance(this.target) > 1.5){
 						this.route.setDestination(this.target);
 						this.route.search();
@@ -109,8 +132,6 @@ abstract public class MovingEntity extends EntityCreature{
 				}
 			}
 		}
-
-		this.move(this.motionX, this.motionY, this.motionZ);
 
 		return super.onUpdate(currentTick);
 	}

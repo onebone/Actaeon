@@ -11,6 +11,11 @@ public class SimpleRouteFinder extends RouteFinter{
 	}
 
 	@Override
+	public boolean research(){
+		return this.search();
+	}
+
+	@Override
 	public boolean isSearching(){
 		return false;
 	}

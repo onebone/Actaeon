@@ -90,6 +90,12 @@ public abstract class RouteFinter{
 	public abstract boolean search();
 
 	/**
+	 * Re-search route to destination
+	 * @return true if finding path is done.
+	 */
+	public abstract boolean research();
+
+	/**
 	 * @return true if searching is not end
 	 */
 	public abstract boolean isSearching();
