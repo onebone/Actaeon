@@ -1,6 +1,6 @@
 package me.onebone.actaeon.route;
 
-public class SimpleRouteFinder extends RouteFinter{
+public class SimpleRouteFinder extends RouteFinder{
 	@Override
 	public boolean search(){
 		this.resetNodes();

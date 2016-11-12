@@ -6,7 +6,7 @@ import cn.nukkit.math.Vector3;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class RouteFinter{
+public abstract class RouteFinder{
 	private int current = 0;
 	protected Vector3 destination = null;
 	protected List<Node> nodes = new ArrayList<>();

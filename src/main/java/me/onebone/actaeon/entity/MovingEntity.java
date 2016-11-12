@@ -7,12 +7,12 @@ import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.math.AxisAlignedBB;
 import cn.nukkit.math.Vector3;
 import cn.nukkit.nbt.tag.CompoundTag;
-import me.onebone.actaeon.route.RouteFinter;
+import me.onebone.actaeon.route.RouteFinder;
 import me.onebone.actaeon.route.SimpleRouteFinder;
 
 abstract public class MovingEntity extends EntityCreature{
 	private boolean isKnockback = false;
-	private RouteFinter route = null;
+	private RouteFinder route = null;
 	private Vector3 target = null;
 
 	private double[] expected = new double[3];
@@ -28,7 +28,7 @@ abstract public class MovingEntity extends EntityCreature{
 
 	public void jump(){
 		if(this.onGround){
-			this.motionY = 0.5;
+			this.motionY = 0.42;
 		}
 	}
 
@@ -85,9 +85,7 @@ abstract public class MovingEntity extends EntityCreature{
 			this.yaw = (float) ((angle * 180) / Math.PI) - 90;
 		}else if(this.route.isSearching()) this.route.search();
 
-		this.move(this.motionX, this.motionY, this.motionZ);
-
-		this.addMotion(this.motionX, this.motionY, this.motionZ);
+		//this.move(this.motionX, this.motionY, this.motionZ);
 
 		if(!this.onGround){
 			this.motionY -= this.getGravity();
