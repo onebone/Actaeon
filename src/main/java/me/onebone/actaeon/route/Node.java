@@ -20,4 +20,8 @@ public class Node{
 	public Vector3 getNode(){
 		return new Vector3(node.x, node.y, node.z);
 	}
+
+	public String toString(){
+		return "Node (x=" + this.node.x + ", y=" + this.node.y + ", " + this.node.z + ")";
+	}
 }

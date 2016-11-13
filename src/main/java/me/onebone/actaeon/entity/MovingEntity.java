@@ -7,8 +7,8 @@ import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.math.AxisAlignedBB;
 import cn.nukkit.math.Vector3;
 import cn.nukkit.nbt.tag.CompoundTag;
+import me.onebone.actaeon.route.AdvancedRouteFinder;
 import me.onebone.actaeon.route.RouteFinder;
-import me.onebone.actaeon.route.SimpleRouteFinder;
 
 abstract public class MovingEntity extends EntityCreature{
 	private boolean isKnockback = false;
@@ -23,7 +23,7 @@ abstract public class MovingEntity extends EntityCreature{
 	public MovingEntity(FullChunk chunk, CompoundTag nbt){
 		super(chunk, nbt);
 
-		this.route = new SimpleRouteFinder(); // TODO Improve route finder
+		this.route = new AdvancedRouteFinder();
 	}
 
 	public void jump(){
@@ -33,10 +33,12 @@ abstract public class MovingEntity extends EntityCreature{
 	}
 
 	@Override
-	public boolean onUpdate(int currentTick){
+	public boolean entityBaseTick(int tickDiff){
 		if(this.closed){
 			return false;
 		}
+
+		boolean hasUpdate = super.entityBaseTick(tickDiff);
 
 		if(this.isKnockback){                   // knockback 이 true 인 경우는 맞은 직후
 			this.isKnockback = false;           // 다음으로 땅에 닿을 때 knockback 으로 인한 움직임을 멈춘다.
@@ -56,17 +58,17 @@ abstract public class MovingEntity extends EntityCreature{
 				if(!this.route.next()){
 					this.route.arrived();
 					this.firstMove = true;
-
-					return super.onUpdate(currentTick);
+					return hasUpdate;
 				}
 			}
+
 
 			if(!this.firstMove){
 				if(this.expected[0] != this.x || this.expected[1] != this.y || this.expected[2] != this.z){ // 장애물을 만났거나 어떤 이유로 다른 곳으로 이동된 경우
 					this.route.research(); // 이럴 경우 경로를 재탐색
 					this.firstMove = true;
 
-					return super.onUpdate(currentTick);
+					return hasUpdate;
 				}
 			}
 			this.firstMove = false;
@@ -76,6 +78,7 @@ abstract public class MovingEntity extends EntityCreature{
 			double speed = this.getMovementSpeed();
 
 			double total = Math.abs(node.z - this.z) + Math.abs(node.x - this.x);
+
 			this.motionX = speed * (node.x - this.x) / total;
 			this.motionZ = speed * (node.z - this.z) / total;
 
@@ -83,13 +86,18 @@ abstract public class MovingEntity extends EntityCreature{
 
 			double angle = Math.atan2(node.z - this.z, node.x - this.x);
 			this.yaw = (float) ((angle * 180) / Math.PI) - 90;
-		}else if(this.route.isSearching()) this.route.search();
 
-		//this.move(this.motionX, this.motionY, this.motionZ);
+			hasUpdate = true;
+		}else if(this.route.isSearching()) this.route.search();
 
 		if(!this.onGround){
 			this.motionY -= this.getGravity();
+
+			hasUpdate = true;
 		}
+
+		this.move(this.motionX, this.motionY, this.motionZ);
+		this.checkGround();
 
 		if(this.onGround){
 			if(!this.route.isSearching()){
@@ -108,15 +116,22 @@ abstract public class MovingEntity extends EntityCreature{
 					this.firstMove = true;
 
 					this.target = near;
+
+					this.route.setStart(this);
 					this.route.setDestination(near);
 
 					this.route.search();
+
+					hasUpdate = true;
 				}else if(this.target != null){
 					this.firstMove = true;
 
 					if(this.route.getDestination().distance(this.target) > 1.5){
+						this.route.setStart(this);
 						this.route.setDestination(this.target);
 						this.route.search();
+
+						hasUpdate = true;
 					}else if(this.distance(this.target) > 10){ // 대상이 너무 멀리 있다면 따라가지 않는다
 						this.target = null;
 						this.route.arrived();
@@ -125,7 +140,7 @@ abstract public class MovingEntity extends EntityCreature{
 			}
 		}
 
-		return super.onUpdate(currentTick);
+		return hasUpdate;
 	}
 
 	@Override
@@ -134,6 +149,11 @@ abstract public class MovingEntity extends EntityCreature{
 		this.isCollidedHorizontally = (movX != dx || movZ != dz);
 		this.isCollided = (this.isCollidedHorizontally || this.isCollidedVertically);
 
+		// this.onGround = (movY != dy && movY < 0);
+		// onGround 는 onUpdate 에서 확인
+	}
+
+	private void checkGround(){
 		AxisAlignedBB[] list = this.level.getCollisionCubes(this, this.level.getTickRate() > 1 ? this.boundingBox.getOffsetBoundingBox(0, -1, 0) : this.boundingBox.addCoord(0, -1, 0), false);
 
 		double maxY = 0;
@@ -144,9 +164,6 @@ abstract public class MovingEntity extends EntityCreature{
 		}
 
 		this.onGround = (maxY == this.boundingBox.minY);
-
-		// this.onGround = (movY != dy && movY < 0);
-		// onGround 는 onUpdate 에서 확인
 	}
 
 	@Override
