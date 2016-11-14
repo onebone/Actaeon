@@ -1,5 +1,7 @@
 package me.onebone.actaeon.route;
 
+import cn.nukkit.level.Level;
+import cn.nukkit.math.AxisAlignedBB;
 import cn.nukkit.math.NukkitMath;
 import cn.nukkit.math.Vector3;
 
@@ -10,6 +12,15 @@ public abstract class RouteFinder{
 	private int current = 0;
 	protected Vector3 destination = null, start = null;
 	protected List<Node> nodes = new ArrayList<>();
+	protected Level level = null;
+	protected AxisAlignedBB aabb = null;
+
+	public void setPositions(Level level, Vector3 start, Vector3 dest, AxisAlignedBB bb){
+		this.setLevel(level);
+		this.setStart(start);
+		this.setDestination(dest);
+		this.setBoundingBox(bb);
+	}
 
 	public void setStart(Vector3 start){
 		if(start == null) throw new IllegalArgumentException("Cannot set start as null");
@@ -37,6 +48,30 @@ public abstract class RouteFinder{
 		if(destination == null) return null;
 
 		return new Vector3(destination.x, destination.y, destination.z);
+	}
+
+	public void setLevel(Level level){
+		if(level == null) throw new IllegalArgumentException("Level cannot be null");
+
+		this.level = level;
+	}
+
+	public Level getLevel(){
+		return this.level;
+	}
+
+	public void setBoundingBox(AxisAlignedBB bb){
+		if(bb == null){
+			this.aabb = new AxisAlignedBB(0, 0, 0, 0, 0, 0);
+		}
+
+		this.aabb = bb;
+	}
+
+	public AxisAlignedBB getBoundingBox(){
+		if(this.aabb == null) return new AxisAlignedBB(0, 0, 0, 0, 0, 0);
+
+		return this.aabb.clone();
 	}
 
 	protected void resetNodes(){
@@ -79,9 +114,12 @@ public abstract class RouteFinder{
 	public boolean hasReachedNode(Vector3 vec){
 		Vector3 cur = this.get().getNode();
 
-		return NukkitMath.floorDouble(vec.x) ==  NukkitMath.floorDouble(cur.x)
+		/*return NukkitMath.floorDouble(vec.x) ==  NukkitMath.floorDouble(cur.x)
 				&& NukkitMath.floorDouble(vec.y) == NukkitMath.floorDouble(cur.y)
-				&& NukkitMath.floorDouble(vec.z) == NukkitMath.floorDouble(cur.z);
+				&& NukkitMath.floorDouble(vec.z) == NukkitMath.floorDouble(cur.z);*/
+		return vec.x == cur.x
+				//&& vec.y == cur.y
+				&& vec.z == cur.z;
 	}
 
 	/**

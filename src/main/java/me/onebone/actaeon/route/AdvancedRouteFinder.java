@@ -34,7 +34,13 @@ public class AdvancedRouteFinder extends RouteFinder{
 		fScore.put(this.getStart(), this.heuristic(this.getStart(), this.getDestination()));
 
 		while(!openSet.isEmpty()){
+			if(openSet.size() + closedSet.size() > 1000){ // eating too much memory
+				System.out.println("TOO MUCH");
+				break;
+			}
+
 			// the node in openSet having the lowest fScore[] value
+
 			Vector3 current = null;
 			for(Vector3 open : openSet){
 				if(current == null || fScore.getOrDefault(open, Double.MAX_VALUE) < fScore.getOrDefault(current, Double.MAX_VALUE)){
@@ -42,12 +48,14 @@ public class AdvancedRouteFinder extends RouteFinder{
 				}
 			}
 
-			if(this.getDestination().floor().equals(current.floor())){ // current cannot be null: openSet is not empty
+			if(this.getDestination().round().equals(current.round())){ // current cannot be null: openSet is not empty
 				List<Node> nodes = new LinkedList<>();
-				nodes.add(new Node(current));
+				nodes.add(new Node(new Vector3((int) current.x + 0.5, (int)current.y, (int) current.z + 0.5)));
 
 				while((current = cameFrom.get(current)) != null){
-					nodes.add(new Node(current));
+
+					nodes.add(new Node(new Vector3((int) current.x + 0.5, (int)current.y, (int) current.z + 0.5)));
+					//level.addParticle(new cn.nukkit.level.particle.CriticalParticle(current, 4));// TODO test code
 				}
 
 				Collections.reverse(nodes);
@@ -60,24 +68,45 @@ public class AdvancedRouteFinder extends RouteFinder{
 			openSet.remove(current);
 			closedSet.add(current);
 
-			for(int i = -1; i <= 1; i++){
-				for(int j = -1; j <= 1; j++){
-					for(int k = -1; k <= 1; k++){
-						if(i == 0 && j == 0 && k == 0 || (j != 0 && (i == 0 || k == 0))) continue; // == current
-						Vector3 neighbor = current.add(i, j, k);
-						if(closedSet.contains(neighbor)) continue;
+			//     x
+			//   x E x
+			//     x
 
-						double tentative_gScore = gScore.get(current) + current.distance(neighbor);
-						if(!openSet.contains(neighbor)){
-							openSet.add(neighbor);
-						}else if(tentative_gScore >= gScore.get(neighbor)){
-							continue;
-						}
+			int[][] scan = new int[][]{
+					new int[]{-1, 0},
+					new int[]{0, -1}, new int[]{0, 1},
+					new int[]{1, 0}
+			};
+			for(int[] c : scan){
+				for(int j = -1; j <= 1; j++){ // y
+					//if(i == 0 && j == 0 && k == 0 || (j != 0 && (i == 0 || k == 0))) continue; // == current
+					Vector3 neighbor = current.add(c[0], j, c[1]);
+					if(closedSet.contains(neighbor)) continue;
 
-						cameFrom.put(neighbor, current);
-						gScore.put(neighbor, tentative_gScore);
-						fScore.put(neighbor, gScore.get(neighbor) + heuristic(neighbor, this.getDestination()));
+					/*AxisAlignedBB aabb = this.getBoundingBox();
+					if(this.getLevel().getCollisionBlocks(new AxisAlignedBB(
+							neighbor.x - ((aabb.maxX - aabb.minX) / 2),
+							neighbor.y - ((aabb.maxY - aabb.minY) / 2),
+							neighbor.z - ((aabb.maxZ - aabb.minZ) / 2),
+							neighbor.x + ((aabb.maxX - aabb.minX) / 2),
+							neighbor.y + ((aabb.maxY - aabb.minY) / 2),
+							neighbor.z + ((aabb.maxZ - aabb.minZ) / 2)
+					)).length > 0) continue;*/
+					if(!this.getLevel().getBlock(neighbor).canPassThrough()) continue;
+
+					double tentative_gScore = gScore.getOrDefault(current, Double.MAX_VALUE) + current.distance(neighbor);
+					tentative_gScore = tentative_gScore < 0 ? Double.MAX_VALUE : tentative_gScore; // overflow
+					if(!openSet.contains(neighbor)){
+						openSet.add(neighbor);
+					}else if(tentative_gScore >= gScore.getOrDefault(neighbor, Double.MAX_VALUE)){
+						continue;
 					}
+
+					cameFrom.put(neighbor, current);
+					gScore.put(neighbor, tentative_gScore);
+					double f = gScore.getOrDefault(neighbor, Double.MAX_VALUE) + heuristic(neighbor, this.getDestination());
+					fScore.put(neighbor, f < 0 ? Double.MAX_VALUE : f);
+					break;
 				}
 			}
 		}

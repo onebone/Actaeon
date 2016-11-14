@@ -79,8 +79,8 @@ abstract public class MovingEntity extends EntityCreature{
 
 			double total = Math.abs(node.z - this.z) + Math.abs(node.x - this.x);
 
-			this.motionX = speed * (node.x - this.x) / total;
-			this.motionZ = speed * (node.z - this.z) / total;
+			this.motionX = Math.min(speed * (node.x - this.x) / total, Math.abs(node.x - this.x));
+			this.motionZ = Math.min(speed * (node.z - this.z) / total, Math.abs(node.z - this.z));
 
 			this.expected = new double[]{this.x + this.motionX, this.y + this.motionY, this.z + this.motionZ};
 
@@ -117,8 +117,11 @@ abstract public class MovingEntity extends EntityCreature{
 
 					this.target = near;
 
+					/*this.route.setLevel(this.level);
 					this.route.setStart(this);
-					this.route.setDestination(near);
+					this.route.setDestination(near);*/
+
+					this.route.setPositions(this.level, this, near, this.boundingBox.clone());
 
 					this.route.search();
 
@@ -127,8 +130,12 @@ abstract public class MovingEntity extends EntityCreature{
 					this.firstMove = true;
 
 					if(this.route.getDestination().distance(this.target) > 1.5){
+						/*this.route.setLevel(level);
 						this.route.setStart(this);
-						this.route.setDestination(this.target);
+						this.route.setDestination(this.target);*/
+
+						this.route.setPositions(this.level, this, this.target, this.boundingBox.clone());
+
 						this.route.search();
 
 						hasUpdate = true;
