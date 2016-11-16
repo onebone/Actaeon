@@ -4,6 +4,8 @@ import cn.nukkit.item.Item;
 import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.nbt.tag.CompoundTag;
 
+import java.util.Random;
+
 public class Sheep extends Animal{
 	public static final int NETWORK_ID = 13;
 
@@ -39,7 +41,7 @@ public class Sheep extends Animal{
 
 	@Override
 	public Item[] getDrops(){
-		return new Item[]{Item.get(Item.WOOL)};
+		return new Item[]{Item.get(Item.WOOL, 0, new Random().nextInt(2) + 1)};
 	}
 
 	@Override

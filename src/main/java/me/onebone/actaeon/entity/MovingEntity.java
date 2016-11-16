@@ -65,7 +65,8 @@ abstract public class MovingEntity extends EntityCreature{
 
 			if(!this.firstMove){
 				if(this.expected[0] != this.x || this.expected[1] != this.y || this.expected[2] != this.z){ // 장애물을 만났거나 어떤 이유로 다른 곳으로 이동된 경우
-					this.route.research(); // 이럴 경우 경로를 재탐색
+					this.route.setStart(this); // 현재의 위치가 바뀌어 있음
+					this.route.research(); // 경로를 재탐색
 					this.firstMove = true;
 
 					return hasUpdate;
@@ -79,8 +80,8 @@ abstract public class MovingEntity extends EntityCreature{
 
 			double total = Math.abs(node.z - this.z) + Math.abs(node.x - this.x);
 
-			this.motionX = Math.min(speed * (node.x - this.x) / total, Math.abs(node.x - this.x));
-			this.motionZ = Math.min(speed * (node.z - this.z) / total, Math.abs(node.z - this.z));
+			this.motionX = Math.abs(speed * (node.x - this.x) / total) < Math.abs(node.x - this.x) ? speed * (node.x - this.x) / total : node.x - this.x;
+			this.motionZ = Math.abs(speed * (node.z - this.z) / total) < Math.abs(node.z - this.z) ? speed * (node.z - this.z) / total : node.z - this.z;
 
 			this.expected = new double[]{this.x + this.motionX, this.y + this.motionY, this.z + this.motionZ};
 
