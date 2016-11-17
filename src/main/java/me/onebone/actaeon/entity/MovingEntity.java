@@ -17,6 +17,7 @@ abstract public class MovingEntity extends EntityCreature{
 
 	private double[] expected = new double[3];
 	private boolean firstMove = true;
+	private boolean searchAgain = false;
 
 	protected int lastRouteUpdate = 0;
 
@@ -53,7 +54,7 @@ abstract public class MovingEntity extends EntityCreature{
 			this.jump();
 		}
 
-		if(!this.route.isSearching() && this.route.isSuccess() && this.route.hasRoute()){
+		if(!this.searchAgain && !this.route.isSearching() && this.route.isSuccess() && this.route.hasRoute()){
 			if(this.route.hasReachedNode(this)){
 				if(!this.route.next()){
 					this.route.arrived();
@@ -68,6 +69,7 @@ abstract public class MovingEntity extends EntityCreature{
 					this.route.setStart(this); // 현재의 위치가 바뀌어 있음
 					this.route.research(); // 경로를 재탐색
 					this.firstMove = true;
+					this.searchAgain = true;
 
 					return hasUpdate;
 				}
@@ -130,7 +132,7 @@ abstract public class MovingEntity extends EntityCreature{
 				}else if(this.target != null){
 					this.firstMove = true;
 
-					if(this.route.getDestination().distance(this.target) > 1.5){
+					if(this.route.getDestination().distance(this.target) > 1.5 || this.searchAgain){
 						/*this.route.setLevel(level);
 						this.route.setStart(this);
 						this.route.setDestination(this.target);*/
@@ -139,6 +141,7 @@ abstract public class MovingEntity extends EntityCreature{
 
 						this.route.search();
 
+						this.searchAgain = false;
 						hasUpdate = true;
 					}else if(this.distance(this.target) > 10){ // 대상이 너무 멀리 있다면 따라가지 않는다
 						this.target = null;

@@ -30,6 +30,8 @@ public class AdvancedRouteFinder extends RouteFinder{
 
 		openSet.add(this.getStart());
 
+		this.destination = new Vector3(this.destination.x, getHighestUnder(this.destination.x, this.destination.y, this.destination.z) + 1, this.destination.z);
+
 		gScore.put(this.getStart(), 0.0);
 		fScore.put(this.getStart(), this.heuristic(this.getStart(), this.getDestination()));
 
@@ -52,7 +54,7 @@ public class AdvancedRouteFinder extends RouteFinder{
 				nodes.add(new Node(this.getDestination()));
 
 				while((current = cameFrom.get(current)) != null){
-					if(cameFrom.get(current) != null){
+					/*if(cameFrom.get(current) != null){
 						Vector3 vec = cameFrom.get(cameFrom.get(current));
 						if(vec != null){
 							Vector3 sub = vec.subtract(current);
@@ -61,7 +63,7 @@ public class AdvancedRouteFinder extends RouteFinder{
 								continue;
 							}
 						}
-					}
+					}*/
 					nodes.add(new Node(new Vector3((int) current.x + 0.5, (int)current.y, (int) current.z + 0.5)));
 					level.addParticle(new cn.nukkit.level.particle.CriticalParticle(current, 4));// TODO test code
 				}
@@ -80,47 +82,54 @@ public class AdvancedRouteFinder extends RouteFinder{
 			//   x E x
 			//     x
 
-			int[][] scan = new int[][]{
+			int[][] check = new int[][]{
 					new int[]{-1, 0},
 					new int[]{0, -1}, new int[]{0, 1},
 					new int[]{1, 0}
 			};
-			for(int[] c : scan){
-				for(int j = -1; j <= 1; j++){ // y
-					//if(i == 0 && j == 0 && k == 0 || (j != 0 && (i == 0 || k == 0))) continue; // == current
-					Vector3 neighbor = current.add(c[0], j, c[1]);
-
-					/*AxisAlignedBB aabb = this.getBoundingBox();
-					if(this.getLevel().getCollisionBlocks(new AxisAlignedBB(
-							neighbor.x - ((aabb.maxX - aabb.minX) / 2),
-							neighbor.y,
-							neighbor.z - ((aabb.maxZ - aabb.minZ) / 2),
-							neighbor.x + ((aabb.maxX - aabb.minX) / 2),
-							neighbor.y + (aabb.maxY - aabb.minY),
-							neighbor.z + ((aabb.maxZ - aabb.minZ) / 2)
-					)).length > 0) continue;*/
-					if(!this.getLevel().getBlock(neighbor).canPassThrough()) continue;
-					if(closedSet.contains(neighbor)) break;
-
-					double tentative_gScore = gScore.getOrDefault(current, Double.MAX_VALUE) + current.distance(neighbor);
-					tentative_gScore = tentative_gScore < 0 ? Double.MAX_VALUE : tentative_gScore; // overflow
-					if(!openSet.contains(neighbor)){
-						openSet.add(neighbor);
-					}else if(tentative_gScore >= gScore.getOrDefault(neighbor, Double.MAX_VALUE)){
-						break;
-					}
-
-					cameFrom.put(neighbor, current);
-					gScore.put(neighbor, tentative_gScore);
-					double f = gScore.getOrDefault(neighbor, Double.MAX_VALUE) + heuristic(neighbor, this.getDestination());
-					fScore.put(neighbor, f < 0 ? Double.MAX_VALUE : f);
-					break;
+			for(int[] c : check){
+				int high = getHighestUnder(Math.floor(current.x) + c[0], Math.floor(current.y) + 2, Math.floor(current.z) + c[1]);
+				if(high == -1 || Math.abs(high + 1 - current.y) >= 1){
+					continue;
 				}
+				Vector3 neighbor = new Vector3(current.x + c[0], high + 1, current.z + c[1]);
+
+				/*AxisAlignedBB aabb = this.getBoundingBox();
+				if(this.getLevel().getCollisionBlocks(new AxisAlignedBB(
+						neighbor.x - ((aabb.maxX - aabb.minX) / 2),
+						neighbor.y,
+						neighbor.z - ((aabb.maxZ - aabb.minZ) / 2),
+						neighbor.x + ((aabb.maxX - aabb.minX) / 2),
+						neighbor.y + (aabb.maxY - aabb.minY),
+						neighbor.z + ((aabb.maxZ - aabb.minZ) / 2)
+				)).length > 0) continue;*/
+				if(!this.getLevel().getBlock(neighbor).canPassThrough()){ System.out.println("CAn't: " + neighbor.y); continue;}
+				if(closedSet.contains(neighbor)) continue;
+
+				double tentative_gScore = gScore.getOrDefault(current, Double.MAX_VALUE) + current.distance(neighbor);
+				tentative_gScore = tentative_gScore < 0 ? Double.MAX_VALUE : tentative_gScore; // overflow
+				if(!openSet.contains(neighbor)){
+					openSet.add(neighbor);
+				}else if(tentative_gScore >= gScore.getOrDefault(neighbor, Double.MAX_VALUE)){
+					continue;
+				}
+
+				cameFrom.put(neighbor, current);
+				gScore.put(neighbor, tentative_gScore);
+				double f = gScore.getOrDefault(neighbor, Double.MAX_VALUE) + heuristic(neighbor, this.getDestination());
+				fScore.put(neighbor, f < 0 ? Double.MAX_VALUE : f);
 			}
 		}
 
 		this.succeed = false;
 		return false;
+	}
+
+	private int getHighestUnder(double x, double dy, double z){
+		for(int y=(int)dy;y >= 0; y--){
+			if(!level.getBlock(new Vector3(x, y, z)).canPassThrough()) return y;
+		}
+		return -1;
 	}
 
 	private double heuristic(Vector3 one, Vector3 two){
