@@ -26,8 +26,6 @@ public abstract class RouteFinder{
 		if(start == null) throw new IllegalArgumentException("Cannot set start as null");
 
 		this.start = new Vector3(start.x, start.y, start.z);
-
-		this.resetNodes();
 	}
 
 	public Vector3 getStart(){
@@ -40,8 +38,6 @@ public abstract class RouteFinder{
 		if(destination == null) throw new IllegalArgumentException("Cannot set destination as null");
 
 		this.destination = new Vector3(destination.x, destination.y, destination.z);
-
-		this.resetNodes();
 	}
 
 	public Vector3 getDestination(){

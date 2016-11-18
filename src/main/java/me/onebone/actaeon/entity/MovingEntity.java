@@ -90,30 +90,27 @@ abstract public class MovingEntity extends EntityCreature{
 			hasUpdate = true;
 		}else if(this.route.isSearching()) this.route.search();
 
-		this.checkGround();
-
 		if(!this.onGround){
 			this.motionY -= this.getGravity();
-
-			hasUpdate = true;
 		}
 
 		this.move(this.motionX, this.motionY, this.motionZ);
 
+		this.checkGround();
 		if(this.onGround){
 			if(!this.route.isSearching()){
 				Entity[] entities = this.level.getNearbyEntities(new AxisAlignedBB(this.x, this.y, this.z, this.x, this.y, this.z).expand(7, 7, 7));
 				Entity near = null;
 
-				if(this.target == null || this.target.distance(this) > 10){
-					for(Entity entity : entities){
+				if(this.target == null || this.target.distance(this) > 30){
+						for(Entity entity : entities){
 						if(entity instanceof Player && (near == null || this.distance(near) < this.distance(entity))){
 							near = entity;
 						}
 					}
 				}
 
-				if(this.target == null && near != null){
+				if(this.route.getDestination() == null && near != null){
 					this.target = near;
 
 					this.route.setPositions(this.level, this, near, this.boundingBox.clone());

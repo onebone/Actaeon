@@ -19,24 +19,31 @@ public class AdvancedRouteFinder extends RouteFinder{
 	private Map<Vector3, Double> gScore = new HashMap<>(),
 								fScore = new HashMap<>();
 
-	private boolean succeed = false;
+	private boolean succeed = false, searching = false;
+
+	private Vector3 realDestination = null;
+
 
 	// https://en.wikipedia.org/wiki/A*_search_algorithm
 	@Override
 	public boolean search(){
-		// TODO 경로 찾는 태스트를 매틱마다 하도록
-		this.resetNodes();
+		int cnt = 0;
 
-		openSet.add(this.getStart());
+		if(this.level == null || this.destination == null || this.start == null){
+			this.succeed = false;
+			this.searching = false;
+			return false;
+		}
 
-		Vector3 destination = new Vector3(this.destination.x, getHighestUnder(this.destination.x, this.destination.y, this.destination.z) + 1, this.destination.z);
-
-		gScore.put(this.getStart(), 0.0);
-		fScore.put(this.getStart(), this.heuristic(this.getStart(), destination));
+		if(!this.searching){
+			this.resetNodes();
+			this.searching = true;
+		}
 
 		while(!openSet.isEmpty()){
+			if(cnt++ > 20) return false; // TODO 엔티티의 수에 따라서 처리량을 다르게 하기
 			if(closedSet.size() > 1000){ // eating too much memory
-				break;
+				return false;
 			}
 
 			// the node in openSet having the lowest fScore[] value
@@ -48,9 +55,9 @@ public class AdvancedRouteFinder extends RouteFinder{
 				}
 			}
 
-			if(destination.floor().equals(current.floor())){ // current cannot be null: openSet is not empty
+			if(this.realDestination.floor().equals(current.floor())){ // current cannot be null: openSet is not empty
 				List<Node> nodes = new LinkedList<>();
-				nodes.add(new Node(destination));
+				nodes.add(new Node(this.realDestination));
 
 				while((current = cameFrom.get(current)) != null){
 					/*if(cameFrom.get(current) != null){
@@ -64,11 +71,13 @@ public class AdvancedRouteFinder extends RouteFinder{
 						}
 					}*/
 					nodes.add(new Node(new Vector3((int) current.x + 0.5, (int)current.y, (int) current.z + 0.5)));
-					level.addParticle(new cn.nukkit.level.particle.CriticalParticle(current, 4));// TODO test code
+					//level.addParticle(new cn.nukkit.level.particle.CriticalParticle(current, 4));// TODO test code
 				}
 
 				Collections.reverse(nodes);
 				nodes.forEach(this::addNode);
+
+				this.searching = false;
 
 				this.succeed = true;
 				return true;
@@ -115,12 +124,12 @@ public class AdvancedRouteFinder extends RouteFinder{
 
 				cameFrom.put(neighbor, current);
 				gScore.put(neighbor, tentative_gScore);
-				double f = gScore.getOrDefault(neighbor, Double.MAX_VALUE) + heuristic(neighbor, destination);
+				double f = gScore.getOrDefault(neighbor, Double.MAX_VALUE) + heuristic(neighbor, this.realDestination);
 				fScore.put(neighbor, f < 0 ? Double.MAX_VALUE : f);
 			}
 		}
 
-		this.succeed = false;
+		this.searching = this.succeed = false;
 		return false;
 	}
 
@@ -142,16 +151,25 @@ public class AdvancedRouteFinder extends RouteFinder{
 		this.gScore.clear(); this.fScore.clear();
 		this.openSet.clear(); this.closedSet.clear();
 		this.cameFrom.clear();
+
+		openSet.add(this.getStart());
+
+		this.realDestination = new Vector3(this.destination.x, getHighestUnder(this.destination.x, this.destination.y, this.destination.z) + 1, this.destination.z);
+
+		gScore.put(this.getStart(), 0.0);
+		fScore.put(this.getStart(), this.heuristic(this.getStart(), this.realDestination));
 	}
 
 	@Override
 	public boolean research(){
+		this.resetNodes();
+
 		return this.search();
 	}
 
 	@Override
 	public boolean isSearching(){
-		return false;
+		return this.searching;
 	}
 
 	@Override
