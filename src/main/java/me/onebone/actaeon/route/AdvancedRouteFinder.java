@@ -25,15 +25,14 @@ public class AdvancedRouteFinder extends RouteFinder{
 	@Override
 	public boolean search(){
 		// TODO 경로 찾는 태스트를 매틱마다 하도록
-
 		this.resetNodes();
 
 		openSet.add(this.getStart());
 
-		this.destination = new Vector3(this.destination.x, getHighestUnder(this.destination.x, this.destination.y, this.destination.z) + 1, this.destination.z);
+		Vector3 destination = new Vector3(this.destination.x, getHighestUnder(this.destination.x, this.destination.y, this.destination.z) + 1, this.destination.z);
 
 		gScore.put(this.getStart(), 0.0);
-		fScore.put(this.getStart(), this.heuristic(this.getStart(), this.getDestination()));
+		fScore.put(this.getStart(), this.heuristic(this.getStart(), destination));
 
 		while(!openSet.isEmpty()){
 			if(closedSet.size() > 1000){ // eating too much memory
@@ -49,9 +48,9 @@ public class AdvancedRouteFinder extends RouteFinder{
 				}
 			}
 
-			if(this.getDestination().round().equals(current.round())){ // current cannot be null: openSet is not empty
+			if(destination.floor().equals(current.floor())){ // current cannot be null: openSet is not empty
 				List<Node> nodes = new LinkedList<>();
-				nodes.add(new Node(this.getDestination()));
+				nodes.add(new Node(destination));
 
 				while((current = cameFrom.get(current)) != null){
 					/*if(cameFrom.get(current) != null){
@@ -103,7 +102,7 @@ public class AdvancedRouteFinder extends RouteFinder{
 						neighbor.y + (aabb.maxY - aabb.minY),
 						neighbor.z + ((aabb.maxZ - aabb.minZ) / 2)
 				)).length > 0) continue;*/
-				if(!this.getLevel().getBlock(neighbor).canPassThrough()){ System.out.println("CAn't: " + neighbor.y); continue;}
+				if(!this.getLevel().getBlock(neighbor).canPassThrough()) continue;
 				if(closedSet.contains(neighbor)) continue;
 
 				double tentative_gScore = gScore.getOrDefault(current, Double.MAX_VALUE) + current.distance(neighbor);
@@ -116,7 +115,7 @@ public class AdvancedRouteFinder extends RouteFinder{
 
 				cameFrom.put(neighbor, current);
 				gScore.put(neighbor, tentative_gScore);
-				double f = gScore.getOrDefault(neighbor, Double.MAX_VALUE) + heuristic(neighbor, this.getDestination());
+				double f = gScore.getOrDefault(neighbor, Double.MAX_VALUE) + heuristic(neighbor, destination);
 				fScore.put(neighbor, f < 0 ? Double.MAX_VALUE : f);
 			}
 		}
