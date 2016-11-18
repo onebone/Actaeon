@@ -32,6 +32,7 @@ public class AdvancedRouteFinder extends RouteFinder{
 		if(this.level == null || this.destination == null || this.start == null){
 			this.succeed = false;
 			this.searching = false;
+
 			return false;
 		}
 
@@ -43,7 +44,7 @@ public class AdvancedRouteFinder extends RouteFinder{
 		while(!openSet.isEmpty()){
 			if(cnt++ > 20) return false; // TODO 엔티티의 수에 따라서 처리량을 다르게 하기
 			if(closedSet.size() > 1000){ // eating too much memory
-				return false;
+				break;
 			}
 
 			// the node in openSet having the lowest fScore[] value
@@ -97,7 +98,7 @@ public class AdvancedRouteFinder extends RouteFinder{
 			};
 			for(int[] c : check){
 				int high = getHighestUnder(Math.floor(current.x) + c[0], Math.floor(current.y) + 2, Math.floor(current.z) + c[1]);
-				if(high == -1 || Math.abs(high + 1 - current.y) >= 1){
+				if(high == -1 || Math.abs(high + 1 - current.y) >= 2){
 					continue;
 				}
 				Vector3 neighbor = new Vector3(current.x + c[0], high + 1, current.z + c[1]);

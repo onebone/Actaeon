@@ -110,7 +110,7 @@ abstract public class MovingEntity extends EntityCreature{
 					}
 				}
 
-				if(this.route.getDestination() == null && near != null){
+				if(!this.hasTarget() && near != null){
 					this.target = near;
 
 					this.route.setPositions(this.level, this, near, this.boundingBox.clone());
@@ -118,7 +118,7 @@ abstract public class MovingEntity extends EntityCreature{
 					this.route.search();
 
 					hasUpdate = true;
-				}else if(this.target != null){
+				}else if(this.hasTarget()){
 					if(this.route.getDestination().distance(this.target) > 1.5){
 						this.route.setPositions(this.level, this, this.target, this.boundingBox.clone());
 
@@ -136,6 +136,10 @@ abstract public class MovingEntity extends EntityCreature{
 		}
 
 		return hasUpdate;
+	}
+
+	private boolean hasTarget(){
+		return this.route.getDestination() != null && this.target != null && this.distance(this.target) < 30;
 	}
 
 	@Override
