@@ -1,5 +1,7 @@
 package me.onebone.actaeon.route;
 
+import cn.nukkit.block.Block;
+import cn.nukkit.math.AxisAlignedBB;
 import cn.nukkit.math.Vector3;
 
 import java.util.Collections;
@@ -71,7 +73,7 @@ public class AdvancedRouteFinder extends RouteFinder{
 							}
 						}
 					}*/
-					nodes.add(new Node(new Vector3((int) current.x + 0.5, (int)current.y, (int) current.z + 0.5)));
+					nodes.add(new Node(new Vector3((int) current.x + 0.5, (int) current.y, (int) current.z + 0.5)));
 					//level.addParticle(new cn.nukkit.level.particle.CriticalParticle(current, 4));// TODO test code
 				}
 
@@ -98,20 +100,22 @@ public class AdvancedRouteFinder extends RouteFinder{
 			};
 			for(int[] c : check){
 				int high = getHighestUnder(Math.floor(current.x) + c[0], Math.floor(current.y) + 2, Math.floor(current.z) + c[1]);
-				if(high == -1 || Math.abs(high + 1 - current.y) >= 2){
+
+				if(high == -1 || high + 1 - current.y < -3 || high + 1 - current.y >= 2){
 					continue;
 				}
 				Vector3 neighbor = new Vector3(current.x + c[0], high + 1, current.z + c[1]);
 
-				/*AxisAlignedBB aabb = this.getBoundingBox();
-				if(this.getLevel().getCollisionBlocks(new AxisAlignedBB(
+				AxisAlignedBB aabb = this.getBoundingBox();
+				aabb = new AxisAlignedBB(
 						neighbor.x - ((aabb.maxX - aabb.minX) / 2),
 						neighbor.y,
 						neighbor.z - ((aabb.maxZ - aabb.minZ) / 2),
 						neighbor.x + ((aabb.maxX - aabb.minX) / 2),
 						neighbor.y + (aabb.maxY - aabb.minY),
 						neighbor.z + ((aabb.maxZ - aabb.minZ) / 2)
-				)).length > 0) continue;*/
+				);
+				if(!checkBlocks(this.getLevel().getCollisionBlocks(aabb), aabb)) continue;
 				if(!this.getLevel().getBlock(neighbor).canPassThrough()) continue;
 				if(closedSet.contains(neighbor)) continue;
 
@@ -130,8 +134,7 @@ public class AdvancedRouteFinder extends RouteFinder{
 			}
 		}
 
-		this.searching = this.succeed = false;
-		return false;
+		return this.searching = this.succeed = false;
 	}
 
 	private int getHighestUnder(double x, double dy, double z){
@@ -139,6 +142,11 @@ public class AdvancedRouteFinder extends RouteFinder{
 			if(!level.getBlock(new Vector3(x, y, z)).canPassThrough()) return y;
 		}
 		return -1;
+	}
+
+	private boolean checkBlocks(Block[] blocks, AxisAlignedBB bb){
+		for(Block block : blocks) if(!block.getBoundingBox().intersectsWith(bb)) return false;
+		return true;
 	}
 
 	private double heuristic(Vector3 one, Vector3 two){
