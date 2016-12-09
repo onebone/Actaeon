@@ -63,16 +63,24 @@ public class AdvancedRouteFinder extends RouteFinder{
 				nodes.add(new Node(this.realDestination));
 
 				while((current = cameFrom.get(current)) != null){
-					/*if(cameFrom.get(current) != null){
-						Vector3 vec = cameFrom.get(cameFrom.get(current));
-						if(vec != null){
-							Vector3 sub = vec.subtract(current);
-							if(Math.abs(sub.x) == Math.abs(sub.z)){
-								current = vec; // skip next
-								continue;
-							}
+					Vector3 temp = current, child = current;
+					while((temp = cameFrom.get(temp)) != null){
+						if((temp = cameFrom.get(temp)) != null){
+							double dx = temp.x - child.x,
+									dz = temp.z - child.z;
+
+							if(Math.abs(dx) == Math.abs(dz) && Math.abs(dx) > 0 && Math.abs(dz) > 0){
+								if(this.level.getBlock(new Vector3(dx > 0 ? child.x + 1 : child.x - 1, child.y + 1, child.z)).canPassThrough()
+								&& this.level.getBlock(new Vector3(child.x, child.y + 1, dz > 0 ? child.z + 1 : child.z - 1)).canPassThrough()){
+									//child.setParent(temp);
+									cameFrom.put(child, temp);
+									current = child = temp;
+								}else break;
+							}else break;
 						}
-					}*/
+					}
+
+
 					nodes.add(new Node(new Vector3((int) current.x + 0.5, (int) current.y, (int) current.z + 0.5)));
 					//level.addParticle(new cn.nukkit.level.particle.CriticalParticle(current, 4));// TODO test code
 				}
