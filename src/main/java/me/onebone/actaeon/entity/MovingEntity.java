@@ -99,33 +99,14 @@ abstract public class MovingEntity extends EntityCreature{
 		this.checkGround();
 		if(this.onGround){
 			if(!this.route.isSearching()){
-				Entity[] entities = this.level.getNearbyEntities(new AxisAlignedBB(this.x, this.y, this.z, this.x, this.y, this.z).expand(7, 7, 7));
-				Entity near = null;
-
-				if(this.target == null || this.target.distance(this) > 30){
-						for(Entity entity : entities){
-						if(entity instanceof Player && (near == null || this.distance(near) < this.distance(entity))){
-							near = entity;
-						}
-					}
-				}
-
-				if(!this.hasTarget() && near != null){
-					this.target = near;
-
-					this.route.setPositions(this.level, this, near, this.boundingBox.clone());
-
-					this.route.search();
-
-					hasUpdate = true;
-				}else if(this.hasTarget()){
+				if(this.hasTarget()){
 					if(this.route.getDestination().distance(this.target) > 1.5){
 						this.route.setPositions(this.level, this, this.target, this.boundingBox.clone());
 
 						this.route.search();
 
 						hasUpdate = true;
-					}else if(this.distance(this.target) > 30){ // 대상이 너무 멀리 있다면 따라가지 않는다
+					}else if(this.distance(this.target) > this.getRange()){ // 대상이 너무 멀리 있다면 따라가지 않는다
 						this.target = null;
 						this.route.arrived();
 					}
@@ -138,8 +119,24 @@ abstract public class MovingEntity extends EntityCreature{
 		return hasUpdate;
 	}
 
-	private boolean hasTarget(){
-		return this.route.getDestination() != null && this.target != null && this.distance(this.target) < 30;
+	public double getRange(){
+		return 30.0;
+	}
+
+	public void setTarget(Vector3 vec){
+		if(vec == null) return;
+
+		this.target = vec;
+		this.route.setPositions(this.level, this, this.target, this.boundingBox.clone());
+		this.route.research();
+	}
+
+	public Vector3 getTarget(){
+		return new Vector3(this.target.x, this.target.y, this.target.z);
+	}
+
+	public boolean hasTarget(){
+		return this.route.getDestination() != null && this.target != null && this.distance(this.target) < this.getRange();
 	}
 
 	@Override

@@ -1,7 +1,10 @@
 package me.onebone.actaeon.entity.animal;
 
+import cn.nukkit.Player;
+import cn.nukkit.entity.Entity;
 import cn.nukkit.item.Item;
 import cn.nukkit.level.format.FullChunk;
+import cn.nukkit.math.AxisAlignedBB;
 import cn.nukkit.nbt.tag.CompoundTag;
 
 import java.util.Random;
@@ -47,6 +50,25 @@ public class Sheep extends Animal{
 	@Override
 	public int getNetworkId(){
 		return NETWORK_ID;
+	}
+
+	@Override
+	public boolean entityBaseTick(int tickDiff){
+		if(!this.hasTarget()){
+			Entity[] entities = this.level.getNearbyEntities(new AxisAlignedBB(this.x, this.y, this.z, this.x, this.y, this.z).expand(7, 7, 7));
+			Entity near = null;
+
+			for(Entity entity : entities){
+				if(entity instanceof Player && ((Player) entity).getInventory().getItemInHand().getId() == Item.WHEAT
+					&& (near == null || this.distance(near) < this.distance(entity))){
+					near = entity;
+				}
+			}
+
+			this.setTarget(near);
+		}
+
+		return super.entityBaseTick(tickDiff);
 	}
 
 	@Override
