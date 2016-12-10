@@ -113,6 +113,7 @@ public class AdvancedRouteFinder extends RouteFinder{
 					continue;
 				}
 				Vector3 neighbor = new Vector3(current.x + c[0], high + 1, current.z + c[1]);
+				if(closedSet.contains(neighbor)) continue;
 
 				AxisAlignedBB aabb = this.getBoundingBox();
 				aabb = new AxisAlignedBB(
@@ -125,7 +126,6 @@ public class AdvancedRouteFinder extends RouteFinder{
 				);
 				if(!checkBlocks(this.getLevel().getCollisionBlocks(aabb), aabb)) continue;
 				if(!this.getLevel().getBlock(neighbor).canPassThrough()) continue;
-				if(closedSet.contains(neighbor)) continue;
 
 				double tentative_gScore = gScore.getOrDefault(current, Double.MAX_VALUE) + current.distance(neighbor);
 				tentative_gScore = tentative_gScore < 0 ? Double.MAX_VALUE : tentative_gScore; // overflow

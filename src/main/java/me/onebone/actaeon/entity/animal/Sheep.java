@@ -60,7 +60,7 @@ public class Sheep extends Animal{
 
 			for(Entity entity : entities){
 				if(entity instanceof Player && ((Player) entity).getInventory().getItemInHand().getId() == Item.WHEAT
-					&& (near == null || this.distance(near) < this.distance(entity))){
+						&& (near == null || this.distance(near) < this.distance(entity))){
 					near = entity;
 				}
 			}
@@ -69,6 +69,11 @@ public class Sheep extends Animal{
 		}
 
 		return super.entityBaseTick(tickDiff);
+	}
+
+	@Override
+	public boolean hasTarget(){
+		return super.hasTarget() && this.getTarget()instanceof Player && ((Player) this.getTarget()).getInventory().getItemInHand().getId() == Item.WHEAT;
 	}
 
 	@Override
