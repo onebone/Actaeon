@@ -142,7 +142,6 @@ public class AdvancedRouteFinder extends RouteFinder{
 		Block block = this.getHighestUnder(vec.x, vec.y + 2, vec.z);
 		if(block == null) return -256;
 
-		System.out.println(block.getName() + ", " + block.getY() + ", " + vec.y+ ", " + (block.y - vec.y));
 		double diff = (block.y - vec.y) + 1;
 
 		if(-4 < diff && diff < 1 && canWalkOn(block)){// TODO: 동물의 종류에 따라 다름
