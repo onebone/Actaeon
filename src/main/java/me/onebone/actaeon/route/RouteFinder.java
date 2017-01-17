@@ -11,6 +11,7 @@ import java.util.List;
 public abstract class RouteFinder{
 	private int current = 0;
 	protected Vector3 destination = null, start = null;
+	private boolean arrived = false;
 	protected List<Node> nodes = new ArrayList<>();
 	protected Level level = null;
 	protected AxisAlignedBB aabb = null;
@@ -72,7 +73,7 @@ public abstract class RouteFinder{
 
 	protected void resetNodes(){
 		this.nodes.clear();
-
+		this.arrived = false;
 		this.current = 0;
 	}
 
@@ -86,7 +87,7 @@ public abstract class RouteFinder{
 	public boolean hasNext(){
 		if(nodes.size() == 0) throw new IllegalStateException("There is no path found");
 
-		return nodes.size() > this.current + 1;
+		return !this.arrived && nodes.size() > this.current + 1;
 	}
 
 	/**
@@ -124,11 +125,14 @@ public abstract class RouteFinder{
 	 */
 	public Node get(){
 		if(nodes.size() == 0) throw new IllegalStateException("There is no path found.");
+
+		if(this.arrived) return null;
 		return nodes.get(current);
 	}
 
 	public void arrived(){
-		this.nodes.clear();
+		this.current = 0;
+		this.arrived = true;
 	}
 
 	public boolean hasRoute(){

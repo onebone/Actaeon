@@ -8,36 +8,56 @@ import cn.nukkit.math.Vector3;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 public class AdvancedRouteFinder extends RouteFinder{
 	private boolean succeed = false, searching = false;
 
 	private Vector3 realDestination = null;
 
-	private TreeSet<Node> open = new TreeSet<>((o1, o2) -> o1.f == -1 ? -1 : (int) Math.floor(o1.f - o2.f));
-	private Set<Node> closed = new HashSet<>();
+	private Set<Node> open = new HashSet<>();
 
-	// https://en.wikipedia.org/wiki/A*_search_algorithm
+	private Grid grid = new Grid();
+
 	@Override
 	public boolean search(){
-		Node start = new Node(this.getStart());
+		this.resetNodes();
+		Node start = new Node(this.getStart().floor());
 		start.f = start.g = 0;
 
 		open.add(start);
+		this.grid.putNode(start.getVector3(), start);
 
-		int limit = 1000;
+		Node endNode = new Node(this.realDestination.floor());
+		this.grid.putNode(endNode.getVector3(), endNode);
+
+		this.succeed = false;
+		this.searching = true;
+
+		int limit = 500;
 		while(!open.isEmpty() && limit-- > 0){
-			Node node = open.pollLast();
-			if(node.getVector3().floor().equals(this.realDestination)){
+			Node node = null;
+
+			double f = Double.MAX_VALUE;
+			for(Node cur : this.open){
+				if(cur.f < f && cur.f != -1){
+					node = cur;
+					f = cur.f;
+				}
+			}
+
+			if(endNode.equals(node)){
 				List<Node> nodes = new ArrayList<>();
 
 				nodes.add(node);
 				while((node = node.getParent()) != null){
+					node.add(0.5, 0, 0.5);
 					//level.addParticle(new cn.nukkit.level.particle.CriticalParticle(node.getVector3(), 3));
+
 					nodes.add(node);
 				}
 				Collections.reverse(nodes);
@@ -47,63 +67,65 @@ public class AdvancedRouteFinder extends RouteFinder{
 				return true;
 			}
 
-			closed.add(node);
+			node.closed = true;
+			open.remove(node);
 
 			for(Node neighbor : this.getNeighbors(node)){
-				if(closed.contains(neighbor)) continue;
+				if(neighbor.closed) continue;
 
 				double tentative_gScore = node.g + neighbor.getVector3().distance(node.getVector3());
 
 				if(!open.contains(neighbor)) open.add(neighbor);
-				else if(tentative_gScore >= neighbor.g && neighbor.g != -1) continue;
+				else if(neighbor.g != -1 && tentative_gScore >= neighbor.g) continue;
 
 				neighbor.setParent(node);
 				neighbor.g = tentative_gScore;
-				neighbor.f = neighbor.g + this.heuristic(neighbor.getVector3(), this.realDestination);
+				neighbor.f = neighbor.g + this.heuristic(neighbor.getVector3(), endNode.getVector3());
 			}
 		}
 		return this.succeed = this.searching = false;
 	}
 
 	public Set<Node> getNeighbors(Node node){
-		Set<Node> nodes = new HashSet<>();
+		Set<Node> neighbors = new HashSet<>();
 
 		Vector3 vec = node.getVector3();
 		boolean s1, s2, s3, s4;
 
-		if(s1 = isWalkableAt(vec.add(1))){
-			nodes.add(new Node(vec.add(1)));
+		double y;
+		if(s1 = (y = isWalkableAt(vec.add(1))) != -256){
+			neighbors.add(this.grid.getNode(vec.add(1, y)));
 		}
 
-		if(s2 = isWalkableAt(vec.add(-1))){
-			nodes.add(new Node(vec.add(-1)));
+		if(s2 = (y = isWalkableAt(vec.add(-1))) != -256){
+			neighbors.add(this.grid.getNode(vec.add(-1, y)));
 		}
 
-		if(s3 = isWalkableAt(vec.add(0, 0, 1))){
-			nodes.add(new Node(vec.add(0, 0, 1)));
+		if(s3 = (y = isWalkableAt(vec.add(0, 0, 1))) != -256){
+			neighbors.add(this.grid.getNode(vec.add(0, y, 1)));
 		}
 
-		if(s4 = isWalkableAt(vec.add(0, 0, -1))){
-			nodes.add(new Node(vec.add(0, 0, -1)));
+		if(s4 = (y = isWalkableAt(vec.add(0, 0, -1))) != -256){
+			neighbors.add(this.grid.getNode(vec.add(0, y, -1)));
 		}
 
-		if(s1 && s3 && isWalkableAt(vec.add(1, 0, 1))){
-			nodes.add(new Node(vec.add(1, 0, 1)));
+		if(s1 && s3 && (y = isWalkableAt(vec.add(1, 0, 1))) != -256){
+			neighbors.add(this.grid.getNode(vec.add(1, y, 1)));
 		}
 
-		if(s1 && s4 && isWalkableAt(vec.add(1, 0, -1))){
-			nodes.add(new Node(vec.add(1, 0, -1)));
+		if(s1 && s4 && (y = isWalkableAt(vec.add(1, 0, -1))) != -256){
+			neighbors.add(this.grid.getNode(vec.add(1, y, -1)));
 		}
 
-		if(s2 && s3 && isWalkableAt(vec.add(-1, 0, 1))){
-			nodes.add(new Node(vec.add(-1, 0, 1)));
+		if(s2 && s3 && (y = isWalkableAt(vec.add(-1, 0, 1))) != -256){
+			neighbors.add(this.grid.getNode(vec.add(-1, y, 1)));
 		}
 
-		if(s2 && s4 && isWalkableAt(vec.add(-1, 0, -1))){
-			nodes.add(new Node(vec.add(-1, 0, -1)));
+		if(s2 && s4 && (y = isWalkableAt(vec.add(-1, 0, -1))) != -256){
+			neighbors.add(this.grid.getNode(vec.add(-1, y, -1)));
 		}
 
-		return nodes;
+		return neighbors;
 	}
 
 	private Block getHighestUnder(double x, double dy, double z){
@@ -116,22 +138,21 @@ public class AdvancedRouteFinder extends RouteFinder{
 		return null;
 	}
 
-	private boolean isWalkableAt(Vector3 vec){
-		Block block = this.getHighestUnder(vec.x, vec.y, vec.z);
-		if(block == null) return false;
+	private double isWalkableAt(Vector3 vec){
+		Block block = this.getHighestUnder(vec.x, vec.y + 2, vec.z);
+		if(block == null) return -256;
 
-		double diff = (block.y - vec.y);
+		System.out.println(block.getName() + ", " + block.getY() + ", " + vec.y+ ", " + (block.y - vec.y));
+		double diff = (block.y - vec.y) + 1;
 
-		return -4 < diff && diff < 2 && canWalkOn(block); // TODO: 동물의 종류에 따라 다름
+		if(-4 < diff && diff < 1 && canWalkOn(block)){// TODO: 동물의 종류에 따라 다름
+			return diff;
+		}
+		return -256;
 	}
 
 	private boolean canWalkOn(Block block){
 		return !(block.getId() == Block.LAVA || block.getId() == Block.STILL_LAVA);
-	}
-
-	private boolean checkBlocks(Block[] blocks, AxisAlignedBB bb){
-		for(Block block : blocks) if(!block.getBoundingBox().intersectsWith(bb)) return false;
-		return true;
 	}
 
 	private double heuristic(Vector3 one, Vector3 two){
@@ -144,6 +165,7 @@ public class AdvancedRouteFinder extends RouteFinder{
 	public void resetNodes(){
 		super.resetNodes();
 
+		this.grid.clear();
 		Block block = this.getHighestUnder(this.destination.x, this.destination.y, this.destination.z);
 		if(block == null){
 			block = new BlockAir();
@@ -168,5 +190,39 @@ public class AdvancedRouteFinder extends RouteFinder{
 	@Override
 	public boolean isSuccess(){
 		return this.succeed;
+	}
+
+	private class Grid{
+		private Map<Double, Map<Double, Map<Double, Node>>> grid = new HashMap<>();
+
+		public void clear(){
+			grid.clear();
+		}
+
+		public void putNode(Vector3 vec, Node node){
+			vec = vec.floor();
+
+			if(!grid.containsKey(vec.x)){
+				grid.put(vec.x, new HashMap<>());
+			}
+
+			if(!grid.get(vec.x).containsKey(vec.y)){
+				grid.get(vec.x).put(vec.y, new HashMap<>());
+			}
+
+			grid.get(vec.x).get(vec.y).put(vec.z, node);
+		}
+
+		public Node getNode(Vector3 vec){
+			vec = vec.floor();
+
+			if(!grid.containsKey(vec.x) || !grid.get(vec.x).containsKey(vec.y) || !grid.get(vec.x).get(vec.y).containsKey(vec.z)){
+				Node node = new Node(vec.x, vec.y, vec.z);
+				this.putNode(node.getVector3(), node);
+				return node;
+			}
+
+			return grid.get(vec.x).get(vec.y).get(vec.z);
+		}
 	}
 }

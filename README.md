@@ -14,4 +14,5 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ```
 
 ## References
-[PathFinding.js](https://github.com/qiao/PathFinding.js)
+[PathFinding.js](https://github.com/qiao/PathFinding.js)<br>
+[A* Algorithm](https://en.wikipedia.org/wiki/A*_search_algorithm)

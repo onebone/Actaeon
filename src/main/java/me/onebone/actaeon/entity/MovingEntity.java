@@ -1,6 +1,5 @@
 package me.onebone.actaeon.entity;
 
-import cn.nukkit.Player;
 import cn.nukkit.entity.Entity;
 import cn.nukkit.entity.EntityCreature;
 import cn.nukkit.level.format.FullChunk;
@@ -8,17 +7,14 @@ import cn.nukkit.math.AxisAlignedBB;
 import cn.nukkit.math.Vector3;
 import cn.nukkit.nbt.tag.CompoundTag;
 import me.onebone.actaeon.route.AdvancedRouteFinder;
+import me.onebone.actaeon.route.Node;
 import me.onebone.actaeon.route.RouteFinder;
 
 abstract public class MovingEntity extends EntityCreature{
 	private boolean isKnockback = false;
 	private RouteFinder route = null;
 	private Vector3 target = null;
-
-	private double[] expected = new double[3];
-	private boolean firstMove = true;
-
-	protected int lastRouteUpdate = 0;
+	private int targetSetter = 0;
 
 	public MovingEntity(FullChunk chunk, CompoundTag nbt){
 		super(chunk, nbt);
@@ -53,67 +49,46 @@ abstract public class MovingEntity extends EntityCreature{
 			this.jump();
 		}
 
-		if(!this.route.isSearching() && this.route.isSuccess() && this.route.hasRoute()){
-			if(this.route.hasReachedNode(this)){
-				if(!this.route.next()){
-					this.route.arrived();
-					this.firstMove = true;
-					return hasUpdate;
-				}
-			}
+		if(this.onGround && this.hasSetTarget() && (this.route.getDestination() == null || this.route.getDestination().distance(this.getTarget()) > 2)){ // 대상이 이동함
+			this.route.setPositions(this.level, this, this.getTarget(), this.boundingBox);
 
-
-			if(!this.firstMove){
-				if(this.expected[0] != this.x || this.expected[1] != this.y || this.expected[2] != this.z){ // 장애물을 만났거나 어떤 이유로 다른 곳으로 이동된 경우
-					this.route.setStart(this); // 현재의 위치가 바뀌어 있음
-					this.firstMove = true;
-
-					return hasUpdate;
-				}
-			}
-			this.firstMove = false;
-
-			Vector3 node = this.route.get().getVector3();
-
-			double speed = this.getMovementSpeed();
-
-			double total = Math.abs(node.z - this.z) + Math.abs(node.x - this.x);
-
-			this.motionX = Math.abs(speed * (node.x - this.x) / total) < Math.abs(node.x - this.x) ? speed * (node.x - this.x) / total : node.x - this.x;
-			this.motionZ = Math.abs(speed * (node.z - this.z) / total) < Math.abs(node.z - this.z) ? speed * (node.z - this.z) / total : node.z - this.z;
-
-			this.expected = new double[]{this.x + this.motionX, this.y + this.motionY, this.z + this.motionZ};
-
-			double angle = Math.atan2(node.z - this.z, node.x - this.x);
-			this.yaw = (float) ((angle * 180) / Math.PI) - 90;
+			if(this.route.isSearching()) this.route.research();
+			else this.route.search();
 
 			hasUpdate = true;
-		}else if(this.route.isSearching()) this.route.search();
+		}
 
-		if(!this.onGround){
-			this.motionY -= this.getGravity();
+		if(!this.route.isSearching() && this.route.isSuccess() && this.route.hasRoute()){ // entity has route to go
+			hasUpdate = true;
+
+			Node node = this.route.get();
+			if(node != null){
+				Vector3 vec = node.getVector3();
+				double diffX = Math.pow(vec.x - this.x, 2);
+				double diffZ = Math.pow(vec.z - this.z, 2);
+
+				if(diffX + diffZ == 0){
+					if(!this.route.next()){
+						this.route.arrived();
+					}
+				}else{
+					int negX = vec.x - this.x < 0 ? -1 : 1;
+					int negZ = vec.z - this.z < 0 ? -1 : 1;
+
+					this.motionX = Math.min(Math.abs(vec.x - this.x), diffX / (diffX + diffZ) * this.getMovementSpeed()) * negX;
+					this.motionZ = Math.min(Math.abs(vec.z - this.z), diffZ / (diffX + diffZ) * this.getMovementSpeed()) * negZ;
+					double angle = Math.atan2(vec.z - this.z, vec.x - this.x);
+					this.yaw = (float) ((angle * 180) / Math.PI) - 90;
+				}
+			}
 		}
 
 		this.move(this.motionX, this.motionY, this.motionZ);
 
 		this.checkGround();
-		if(this.onGround){
-			if(!this.route.isSearching()){
-				if(this.hasTarget()){
-					if(this.route.getDestination().distance(this.target) > 1.5){
-						this.route.setPositions(this.level, this, this.target, this.boundingBox.clone());
-
-						this.route.search();
-
-						hasUpdate = true;
-					}else if(this.distance(this.target) > this.getRange()){ // 대상이 너무 멀리 있다면 따라가지 않는다
-						this.target = null;
-						this.route.arrived();
-					}
-				}
-
-				this.firstMove = true;
-			}
+		if(!this.onGround){
+			this.motionY -= this.getGravity();
+			hasUpdate = true;
 		}
 
 		return hasUpdate;
@@ -123,20 +98,41 @@ abstract public class MovingEntity extends EntityCreature{
 		return 30.0;
 	}
 
-	public void setTarget(Vector3 vec){
-		if(vec == null) return;
+	public void setTarget(Vector3 vec, int identifier){
+		this.setTarget(vec, identifier, false);
+	}
 
+	public void setTarget(Vector3 vec, int identifier, boolean forceSearch){
+		if(vec == null) return;
 		this.target = vec;
-		this.route.setPositions(this.level, this, this.target, this.boundingBox.clone());
-		this.route.research();
+		this.targetSetter = identifier;
+
+		if(forceSearch || !this.route.hasRoute()){
+			this.route.setPositions(this.level, this, this.target, this.boundingBox.clone());
+			if(this.route.isSearching()) this.route.research();
+			else this.route.search();
+		}
 	}
 
 	public Vector3 getTarget(){
 		return new Vector3(this.target.x, this.target.y, this.target.z);
 	}
 
-	public boolean hasTarget(){
+	/**
+	 * Returns whether the entity has following target
+	 * Entity will try to move to position where target exists
+	 */
+	public boolean hasFollowingTarget(){
 		return this.route.getDestination() != null && this.target != null && this.distance(this.target) < this.getRange();
+	}
+
+	/**
+	 * Returns whether the entity has set its target
+	 * The entity may not follow the target if there is following target and set target is different
+	 * If following distance of target is too far to follow or cannot reach, set target will be the next following target
+	 */
+	public boolean hasSetTarget(){
+		return this.target != null && this.distance(this.target) < this.getRange();
 	}
 
 	@Override

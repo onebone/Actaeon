@@ -4,6 +4,7 @@ import cn.nukkit.math.Vector3;
 
 public class Node{
 	private Node parent = null;
+	public boolean closed = false;
 
 	private Vector3 node;
 	public double f = -1;
@@ -25,6 +26,26 @@ public class Node{
 		return new Vector3(node.x, node.y, node.z);
 	}
 
+	public Vector3 getRawVector3(){
+		return this.node;
+	}
+
+	public double getX(){
+		return this.node.x;
+	}
+
+	public double getY(){
+		return this.node.y;
+	}
+
+	public double getZ(){
+		return this.node.z;
+	}
+
+	public void add(double x, double y, double z){
+		this.node = this.node.add(x, y, z);
+	}
+
 	public String toString(){
 		return "Node (x=" + this.node.x + ", y=" + this.node.y + ", " + this.node.z + ")";
 	}
@@ -35,5 +56,9 @@ public class Node{
 
 	public Node getParent(){
 		return this.parent;
+	}
+
+	public boolean equals(Node node){
+		return this.getVector3().equals(node.getVector3());
 	}
 }

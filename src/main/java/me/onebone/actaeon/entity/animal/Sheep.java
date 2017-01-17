@@ -65,15 +65,14 @@ public class Sheep extends Animal{
 				}
 			}
 
-			this.setTarget(near);
+			this.setTarget(near, 0);
 		}
 
 		return super.entityBaseTick(tickDiff);
 	}
 
-	@Override
 	public boolean hasTarget(){
-		return super.hasTarget() && this.getTarget()instanceof Player && ((Player) this.getTarget()).getInventory().getItemInHand().getId() == Item.WHEAT;
+		return super.hasFollowingTarget() && this.getTarget() instanceof Player && ((Player) this.getTarget()).getInventory().getItemInHand().getId() == Item.WHEAT;
 	}
 
 	@Override
