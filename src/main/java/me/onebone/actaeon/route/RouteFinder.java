@@ -108,7 +108,7 @@ public abstract class RouteFinder{
 	 * @return true if reached
 	 */
 	public boolean hasReachedNode(Vector3 vec){
-		Vector3 cur = this.get().getNode();
+		Vector3 cur = this.get().getVector3();
 
 		/*return NukkitMath.floorDouble(vec.x) ==  NukkitMath.floorDouble(cur.x)
 				&& NukkitMath.floorDouble(vec.y) == NukkitMath.floorDouble(cur.y)

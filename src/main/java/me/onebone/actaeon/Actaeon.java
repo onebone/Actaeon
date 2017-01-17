@@ -9,10 +9,10 @@ public class Actaeon extends PluginBase{
 	public void onEnable(){
 		this.saveDefaultConfig();
 
-		this.registerEntity(Sheep.class);
+		this.registerEntity("Sheep", Sheep.class);
 	}
 
-	private void registerEntity(Class<? extends MovingEntity> clazz){
-		Entity.registerEntity(clazz.getSimpleName(), clazz, true);
+	private void registerEntity(String name, Class<? extends MovingEntity> clazz){
+		Entity.registerEntity(name, clazz, true);
 	}
 }

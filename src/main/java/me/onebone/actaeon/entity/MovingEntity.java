@@ -73,7 +73,7 @@ abstract public class MovingEntity extends EntityCreature{
 			}
 			this.firstMove = false;
 
-			Vector3 node = this.route.get().getNode();
+			Vector3 node = this.route.get().getVector3();
 
 			double speed = this.getMovementSpeed();
 
