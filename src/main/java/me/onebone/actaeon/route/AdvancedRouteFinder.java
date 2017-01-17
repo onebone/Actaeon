@@ -14,12 +14,12 @@ import java.util.Set;
 
 public class AdvancedRouteFinder extends RouteFinder{
 	private Set<Vector3> closedSet = new HashSet<>(),
-						openSet = new HashSet<>();
+			openSet = new HashSet<>();
 
 	private Map<Vector3, Vector3> cameFrom = new HashMap<>();
 
 	private Map<Vector3, Double> gScore = new HashMap<>(),
-								fScore = new HashMap<>();
+			fScore = new HashMap<>();
 
 	private boolean succeed = false, searching = false;
 
@@ -29,127 +29,21 @@ public class AdvancedRouteFinder extends RouteFinder{
 	// https://en.wikipedia.org/wiki/A*_search_algorithm
 	@Override
 	public boolean search(){
-		int cnt = 0;
-
-		if(this.level == null || this.destination == null || this.start == null){
-			this.succeed = false;
-			this.searching = false;
-
-			return false;
-		}
-
-		if(!this.searching){
-			this.resetNodes();
-			this.searching = true;
-		}
-
-		while(!openSet.isEmpty()){
-			if(cnt++ > 20) return false; // TODO 엔티티의 수에 따라서 처리량을 다르게 하기
-			if(closedSet.size() > 1000){ // eating too much memory
-				break;
-			}
-
-			// the node in openSet having the lowest fScore[] value
-
-			Vector3 current = null;
-			for(Vector3 open : openSet){
-				if(current == null || fScore.getOrDefault(open, Double.MAX_VALUE) < fScore.getOrDefault(current, Double.MAX_VALUE)){
-					current = open;
-				}
-			}
-
-			if(this.realDestination.floor().equals(current.floor())){ // current cannot be null: openSet is not empty
-				List<Node> nodes = new LinkedList<>();
-				nodes.add(new Node(this.realDestination));
-
-				while((current = cameFrom.get(current)) != null){
-					Vector3 temp = current, child = current;
-					while((temp = cameFrom.get(temp)) != null){
-						if((temp = cameFrom.get(temp)) != null){
-							double dx = temp.x - child.x,
-									dz = temp.z - child.z;
-
-							if(Math.abs(dx) == Math.abs(dz) && Math.abs(dx) > 0 && Math.abs(dz) > 0){
-								if(this.level.getBlock(new Vector3(dx > 0 ? child.x + 1 : child.x - 1, child.y + 1, child.z)).canPassThrough()
-								&& this.level.getBlock(new Vector3(child.x, child.y + 1, dz > 0 ? child.z + 1 : child.z - 1)).canPassThrough()){
-									//child.setParent(temp);
-									cameFrom.put(child, temp);
-									current = child = temp;
-								}else break;
-							}else break;
-						}
-					}
-
-
-					nodes.add(new Node(new Vector3((int) current.x + 0.5, (int) current.y, (int) current.z + 0.5)));
-					//level.addParticle(new cn.nukkit.level.particle.CriticalParticle(current, 4));// TODO test code
-				}
-
-				Collections.reverse(nodes);
-				nodes.forEach(this::addNode);
-
-				this.searching = false;
-
-				this.succeed = true;
-				return true;
-			}
-
-			openSet.remove(current);
-			closedSet.add(current);
-
-			//     x
-			//   x E x
-			//     x
-
-			int[][] check = new int[][]{
-					new int[]{-1, 0},
-					new int[]{0, -1}, new int[]{0, 1},
-					new int[]{1, 0}
-			};
-			for(int[] c : check){
-				int high = getHighestUnder(Math.floor(current.x) + c[0], Math.floor(current.y) + 2, Math.floor(current.z) + c[1]);
-
-				if(high == -1 || high + 1 - current.y < -3 || high + 1 - current.y >= 2){
-					continue;
-				}
-				Vector3 neighbor = new Vector3(current.x + c[0], high + 1, current.z + c[1]);
-				if(closedSet.contains(neighbor)) continue;
-
-				AxisAlignedBB aabb = this.getBoundingBox();
-				aabb = new AxisAlignedBB(
-						neighbor.x - ((aabb.maxX - aabb.minX) / 2),
-						neighbor.y,
-						neighbor.z - ((aabb.maxZ - aabb.minZ) / 2),
-						neighbor.x + ((aabb.maxX - aabb.minX) / 2),
-						neighbor.y + (aabb.maxY - aabb.minY),
-						neighbor.z + ((aabb.maxZ - aabb.minZ) / 2)
-				);
-				if(!checkBlocks(this.getLevel().getCollisionBlocks(aabb), aabb)) continue;
-				if(!this.getLevel().getBlock(neighbor).canPassThrough()) continue;
-
-				double tentative_gScore = gScore.getOrDefault(current, Double.MAX_VALUE) + current.distance(neighbor);
-				tentative_gScore = tentative_gScore < 0 ? Double.MAX_VALUE : tentative_gScore; // overflow
-				if(!openSet.contains(neighbor)){
-					openSet.add(neighbor);
-				}else if(tentative_gScore >= gScore.getOrDefault(neighbor, Double.MAX_VALUE)){
-					continue;
-				}
-
-				cameFrom.put(neighbor, current);
-				gScore.put(neighbor, tentative_gScore);
-				double f = gScore.getOrDefault(neighbor, Double.MAX_VALUE) + heuristic(neighbor, this.realDestination);
-				fScore.put(neighbor, f < 0 ? Double.MAX_VALUE : f);
-			}
-		}
-
-		return this.searching = this.succeed = false;
+		return false;
 	}
 
 	private int getHighestUnder(double x, double dy, double z){
 		for(int y=(int)dy;y >= 0; y--){
-			if(!level.getBlock(new Vector3(x, y, z)).canPassThrough()) return y;
+			Block block = level.getBlock(new Vector3(x, y, z));
+			if(!canWalkOn(block)) return -1;
+
+			if(!block.canPassThrough()) return y;
 		}
 		return -1;
+	}
+
+	private boolean canWalkOn(Block block){
+		return !(block.getId() == Block.LAVA || block.getId() == Block.STILL_LAVA);
 	}
 
 	private boolean checkBlocks(Block[] blocks, AxisAlignedBB bb){
