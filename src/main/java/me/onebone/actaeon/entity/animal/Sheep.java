@@ -59,13 +59,14 @@ public class Sheep extends Animal{
 			Entity near = null;
 
 			for(Entity entity : entities){
-				if(entity instanceof Player && ((Player) entity).getInventory().getItemInHand().getId() == Item.WHEAT
-						&& (near == null || this.distance(near) < this.distance(entity))){
-					near = entity;
+				if(entity instanceof Player && (near == null || this.distance(near) < this.distance(entity))){
+					if(((Player) entity).getInventory().getItemInHand().getId() == Item.WHEAT){
+						near = entity;
+					}
 				}
 			}
 
-			this.setTarget(near, 0);
+			this.setTarget(near, "Sheep");
 		}
 
 		return super.entityBaseTick(tickDiff);

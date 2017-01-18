@@ -14,7 +14,7 @@ abstract public class MovingEntity extends EntityCreature{
 	private boolean isKnockback = false;
 	private RouteFinder route = null;
 	private Vector3 target = null;
-	private int targetSetter = 0;
+	private String targetSetter = "";
 
 	public MovingEntity(FullChunk chunk, CompoundTag nbt){
 		super(chunk, nbt);
@@ -98,16 +98,20 @@ abstract public class MovingEntity extends EntityCreature{
 		return 30.0;
 	}
 
-	public void setTarget(Vector3 vec, int identifier){
+	public void setTarget(Vector3 vec, String identifier){
 		this.setTarget(vec, identifier, false);
 	}
 
-	public void setTarget(Vector3 vec, int identifier, boolean forceSearch){
-		if(vec == null) return;
-		this.target = vec;
-		this.targetSetter = identifier;
+	public void setTarget(Vector3 vec, String identifier, boolean forceSearch){
+		if(identifier == null) return;
 
-		if(forceSearch || !this.route.hasRoute()){
+		if(forceSearch || !this.hasSetTarget() || identifier.equals(this.targetSetter)){
+			this.target = vec;
+
+			this.targetSetter = identifier;
+		}
+
+		if(this.hasSetTarget() && (forceSearch || !this.route.hasRoute())){
 			this.route.setPositions(this.level, this, this.target, this.boundingBox.clone());
 			if(this.route.isSearching()) this.route.research();
 			else this.route.search();
