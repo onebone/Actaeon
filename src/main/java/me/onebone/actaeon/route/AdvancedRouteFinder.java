@@ -3,8 +3,11 @@ package me.onebone.actaeon.route;
 import cn.nukkit.block.Block;
 import cn.nukkit.block.BlockAir;
 import cn.nukkit.level.Position;
-import cn.nukkit.math.AxisAlignedBB;
 import cn.nukkit.math.Vector3;
+import me.onebone.actaeon.entity.Climbable;
+import me.onebone.actaeon.entity.Fallable;
+import me.onebone.actaeon.entity.MovingEntity;
+import me.onebone.actaeon.entity.animal.Chicken;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,8 +26,16 @@ public class AdvancedRouteFinder extends RouteFinder{
 
 	private Grid grid = new Grid();
 
+	public AdvancedRouteFinder(MovingEntity entity){
+		super(entity);
+	}
+
 	@Override
 	public boolean search(){
+		if(this.getStart() == null || this.getDestination() == null){
+			return this.succeed = this.searching = false;
+		}
+
 		this.resetNodes();
 		Node start = new Node(this.getStart().floor());
 		start.f = start.g = 0;
@@ -146,7 +157,7 @@ public class AdvancedRouteFinder extends RouteFinder{
 
 		double diff = (block.y - vec.y) + 1;
 
-		if(-4 < diff && diff <= 1 && canWalkOn(block)){// TODO: 동물의 종류에 따라 다름
+		if((this.entity instanceof Fallable || -4 < diff) && (this.entity instanceof Climbable || diff <= 1) && canWalkOn(block)){
 			return diff;
 		}
 		return -256;

@@ -19,7 +19,7 @@ abstract public class MovingEntity extends EntityCreature{
 	public MovingEntity(FullChunk chunk, CompoundTag nbt){
 		super(chunk, nbt);
 
-		this.route = new AdvancedRouteFinder();
+		this.route = new AdvancedRouteFinder(this);
 	}
 
 	public void jump(){
@@ -162,7 +162,7 @@ abstract public class MovingEntity extends EntityCreature{
 	}
 
 	@Override
-	public void initEntity(){
+	protected void initEntity(){
 		super.initEntity();
 
 		this.setDataFlag(Entity.DATA_FLAGS, Entity.DATA_FLAG_NO_AI);

@@ -2,54 +2,38 @@ package me.onebone.actaeon.entity.animal;
 
 import cn.nukkit.Player;
 import cn.nukkit.entity.Entity;
+import cn.nukkit.entity.EntityAgeable;
 import cn.nukkit.item.Item;
 import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.math.AxisAlignedBB;
 import cn.nukkit.nbt.tag.CompoundTag;
 
-import java.util.Random;
+public class Pig extends Animal implements EntityAgeable{
+	public static final int NETWORK_ID = 12;
 
-public class Sheep extends Animal{
-	public static final int NETWORK_ID = 13;
-
-	public Sheep(FullChunk chunk, CompoundTag nbt){
+	public Pig(FullChunk chunk, CompoundTag nbt) {
 		super(chunk, nbt);
 	}
 
 	@Override
-	public float getWidth(){
+	public float getWidth() {
 		return 0.9f;
 	}
 
 	@Override
-	public float getHeight(){
-		if (isBaby()){
+	public float getHeight() {
+		if (isBaby()) {
 			return 0.9f; // No have information
 		}
-		return 1.3f;
+		return 0.9f;
 	}
 
 	@Override
-	public float getEyeHeight(){
-		if (isBaby()){
-			return 0.95f * 0.9f; // No have information
+	public float getEyeHeight() {
+		if (isBaby()) {
+			return 0.9f; // No have information
 		}
-		return 0.95f * getHeight();
-	}
-
-	@Override
-	public String getName(){
-		return this.getNameTag();
-	}
-
-	@Override
-	public Item[] getDrops(){
-		return new Item[]{Item.get(Item.WOOL, 0, new Random().nextInt(2) + 1)};
-	}
-
-	@Override
-	public int getNetworkId(){
-		return NETWORK_ID;
+		return 0.9f;
 	}
 
 	@Override
@@ -60,13 +44,13 @@ public class Sheep extends Animal{
 
 			for(Entity entity : entities){
 				if(entity instanceof Player && (near == null || this.distance(near) < this.distance(entity))){
-					if(((Player) entity).getInventory().getItemInHand().getId() == Item.WHEAT){
+					if(((Player) entity).getInventory().getItemInHand().getId() == Item.CARROT){
 						near = entity;
 					}
 				}
 			}
 
-			this.setTarget(near, "Sheep");
+			this.setTarget(near, "Pig");
 		}
 
 		return super.entityBaseTick(tickDiff);
@@ -77,8 +61,28 @@ public class Sheep extends Animal{
 	}
 
 	@Override
-	protected void initEntity(){
+	public String getName() {
+		return this.getNameTag();
+	}
+
+	@Override
+	public Item[] getDrops() {
+		return new Item[]{Item.get(Item.RAW_PORKCHOP)};
+	}
+
+	@Override
+	public int getNetworkId() {
+		return NETWORK_ID;
+	}
+
+	@Override
+	protected void initEntity() {
 		super.initEntity();
-		this.setMaxHealth(8);
+		setMaxHealth(10);
+	}
+
+	@Override
+	public boolean isBaby(){
+		return false;
 	}
 }

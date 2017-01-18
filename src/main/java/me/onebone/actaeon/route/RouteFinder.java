@@ -4,6 +4,7 @@ import cn.nukkit.level.Level;
 import cn.nukkit.math.AxisAlignedBB;
 import cn.nukkit.math.NukkitMath;
 import cn.nukkit.math.Vector3;
+import me.onebone.actaeon.entity.MovingEntity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,18 @@ public abstract class RouteFinder{
 	protected List<Node> nodes = new ArrayList<>();
 	protected Level level = null;
 	protected AxisAlignedBB aabb = null;
+
+	protected MovingEntity entity = null;
+
+	public RouteFinder(MovingEntity entity){
+		if(entity == null) throw new IllegalArgumentException("Entity cannot be null");
+
+		this.entity = entity;
+	}
+
+	public MovingEntity getEntity(){
+		return this.entity;
+	}
 
 	public void setPositions(Level level, Vector3 start, Vector3 dest, AxisAlignedBB bb){
 		this.setLevel(level);
@@ -36,7 +49,10 @@ public abstract class RouteFinder{
 	}
 
 	public void setDestination(Vector3 destination){
-		if(destination == null) throw new IllegalArgumentException("Cannot set destination as null");
+		if(destination == null){
+			this.destination = null;
+			return;
+		}
 
 		this.destination = new Vector3(destination.x, destination.y, destination.z);
 	}
