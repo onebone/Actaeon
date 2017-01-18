@@ -45,7 +45,7 @@ abstract public class MovingEntity extends EntityCreature{
 		this.motionX *= (1 - this.getDrag());
 		this.motionZ *= (1 - this.getDrag());
 
-		if(this.isCollidedHorizontally){
+		if(this.motionX != 0 && this.motionZ != 0 && this.isCollidedHorizontally){
 			this.jump();
 		}
 
