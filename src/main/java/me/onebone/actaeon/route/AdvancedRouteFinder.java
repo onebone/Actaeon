@@ -26,7 +26,7 @@ public class AdvancedRouteFinder extends RouteFinder{
 	@Override
 	public boolean search(){
 		this.resetNodes();
-		Node start = new Node(this.getStart().floor());
+		Node start = new Node(this.getStart());
 		start.f = start.g = 0;
 
 		open.add(start);
