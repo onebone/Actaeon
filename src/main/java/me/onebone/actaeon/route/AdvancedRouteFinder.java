@@ -26,7 +26,7 @@ public class AdvancedRouteFinder extends RouteFinder{
 	@Override
 	public boolean search(){
 		this.resetNodes();
-		Node start = new Node(this.getStart());
+		Node start = new Node(this.getStart().floor());
 		start.f = start.g = 0;
 
 		open.add(start);
@@ -59,8 +59,9 @@ public class AdvancedRouteFinder extends RouteFinder{
 					//level.addParticle(new cn.nukkit.level.particle.CriticalParticle(node.getVector3(), 3));
 
 					nodes.add(node);
-				}
+				};
 				Collections.reverse(nodes);
+				nodes.remove(0);
 
 				nodes.forEach(this::addNode);
 				this.succeed = true; this.searching = false;
@@ -83,6 +84,7 @@ public class AdvancedRouteFinder extends RouteFinder{
 				neighbor.f = neighbor.g + this.heuristic(neighbor.getVector3(), endNode.getVector3());
 			}
 		}
+
 		return this.succeed = this.searching = false;
 	}
 
@@ -144,7 +146,7 @@ public class AdvancedRouteFinder extends RouteFinder{
 
 		double diff = (block.y - vec.y) + 1;
 
-		if(-4 < diff && diff < 1 && canWalkOn(block)){// TODO: 동물의 종류에 따라 다름
+		if(-4 < diff && diff <= 1 && canWalkOn(block)){// TODO: 동물의 종류에 따라 다름
 			return diff;
 		}
 		return -256;

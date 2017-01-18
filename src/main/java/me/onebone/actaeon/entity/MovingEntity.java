@@ -45,10 +45,6 @@ abstract public class MovingEntity extends EntityCreature{
 		this.motionX *= (1 - this.getDrag());
 		this.motionZ *= (1 - this.getDrag());
 
-		if(this.motionX != 0 && this.motionZ != 0 && this.isCollidedHorizontally){
-			this.jump();
-		}
-
 		if(this.onGround && this.hasSetTarget() && (this.route.getDestination() == null || this.route.getDestination().distance(this.getTarget()) > 2)){ // 대상이 이동함
 			this.route.setPositions(this.level, this, this.getTarget(), this.boundingBox);
 
@@ -83,6 +79,9 @@ abstract public class MovingEntity extends EntityCreature{
 			}
 		}
 
+		if(this.motionX != 0 && this.motionZ != 0 && this.isCollidedHorizontally){
+			this.jump();
+		}
 		this.move(this.motionX, this.motionY, this.motionZ);
 
 		this.checkGround();
