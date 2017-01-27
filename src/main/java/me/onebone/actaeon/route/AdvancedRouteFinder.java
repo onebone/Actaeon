@@ -7,7 +7,6 @@ import cn.nukkit.math.Vector3;
 import me.onebone.actaeon.entity.Climbable;
 import me.onebone.actaeon.entity.Fallable;
 import me.onebone.actaeon.entity.MovingEntity;
-import me.onebone.actaeon.entity.animal.Chicken;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -169,8 +168,13 @@ public class AdvancedRouteFinder extends RouteFinder{
 
 	private double heuristic(Vector3 one, Vector3 two){
 		double dx = Math.abs(one.x - two.x);
-		double dy = Math.abs(one.z - two.z);
-		return (Math.sqrt(2) - 1) * Math.min(dx, dy) + Math.max(dx, dy);
+		double dy = Math.abs(one.y - two.y);
+		double dz = Math.abs(one.z - two.z);
+
+		double max = Math.max(dx, dz);
+		double min = Math.min(dx, dz);
+
+		return 0.414 * min + max + dy;
 	}
 
 	@Override

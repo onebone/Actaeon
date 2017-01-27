@@ -79,7 +79,7 @@ abstract public class MovingEntity extends EntityCreature{
 			}
 		}
 
-		if(this.motionX != 0 && this.motionZ != 0 && this.isCollidedHorizontally){
+		if((this.motionX != 0 || this.motionZ != 0) && this.isCollidedHorizontally){
 			this.jump();
 		}
 		this.move(this.motionX, this.motionY, this.motionZ);
@@ -177,6 +177,6 @@ abstract public class MovingEntity extends EntityCreature{
 
 	@Override
 	public void addMovement(double x, double y, double z, double yaw, double pitch, double headYaw) {
-		this.level.addEntityMovement(this.chunk.getX(), this.chunk.getZ(), this.id, x, y - this.getHeight(), z, yaw, pitch, headYaw);
+		this.level.addEntityMovement(this.chunk.getX(), this.chunk.getZ(), this.id, x, y - this.getEyeHeight(), z, yaw, pitch, headYaw);
 	}
 }
