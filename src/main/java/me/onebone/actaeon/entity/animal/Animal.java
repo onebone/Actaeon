@@ -3,12 +3,14 @@ package me.onebone.actaeon.entity.animal;
 import cn.nukkit.Player;
 import cn.nukkit.entity.Entity;
 import cn.nukkit.entity.EntityAgeable;
+import cn.nukkit.item.Item;
 import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.nbt.tag.CompoundTag;
 import cn.nukkit.network.protocol.AddEntityPacket;
+import me.onebone.actaeon.entity.Ageable;
 import me.onebone.actaeon.entity.MovingEntity;
 
-abstract public class Animal extends MovingEntity implements EntityAgeable{
+abstract public class Animal extends Ageable implements EntityAgeable{
 	public Animal(FullChunk chunk, CompoundTag nbt){
 		super(chunk, nbt);
 	}
@@ -34,5 +36,9 @@ abstract public class Animal extends MovingEntity implements EntityAgeable{
 		player.dataPacket(pk);
 
 		super.spawnTo(player);
+	}
+
+	public boolean isBreedingItem(Item item) {
+		return item.getId() == Item.WHEAT;
 	}
 }
