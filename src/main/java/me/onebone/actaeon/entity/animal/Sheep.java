@@ -110,14 +110,14 @@ public class Sheep extends Animal {
 	}
 
 	@Override
-	public boolean onInteract(Entity entity, Item item) {
+	public boolean onInteract(Player player, Item item) {
 		if (item.getId() == Item.DYE) {
 			this.setColor(((ItemDye) item).getDyeColor().getWoolData());
 			return true;
 		}
 
 		if (item.getId() != Item.SHEARS) {
-			return super.onInteract(entity, item);
+			return super.onInteract(player, item);
 		}
 
 		return shear();
